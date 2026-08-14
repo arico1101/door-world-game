@@ -274,8 +274,20 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 }
 .fam-card .f-name{font-weight:900; font-size:18px; margin-bottom:8px;}
 .fam-card .f-story{font-size:14px; line-height:1.9; margin-bottom:12px;}
+.fam-card .f-asa{color:rgba(74,58,48,.85);}
+.fam-card .f-asa b{color:#B8860B;}
+/* ステータス行: カテゴリ名は薄め、値はカテゴリ色で目立たせる */
 .fam-card .f-stats{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;}
-.fam-card .f-stats span b{font-family:"DotGothic16",monospace;}
+.fam-card .f-stats span{color:rgba(74,58,48,.62);}
+.fam-card .f-stats span b{font-family:"DotGothic16",monospace; color:var(--brown);}
+.fam-card .f-stats .fs-money b{color:#5a9114;}
+.fam-card .f-stats .fs-daily b{color:#d24a3c;}
+.fam-card .f-stats .fs-wage b{color:#007D91;}
+.fam-card .f-stats .fs-allow b{color:#5a9114;}
+.fam-card .f-stats .fs-region b{color:#007D91;}
+.fam-card .f-stats .fs-hidden b{color:#c77f00;}
+.fam-card .f-stats .fs-perk{color:rgba(74,58,48,.8);}
+.fam-card .f-stats .fs-perk b{color:#8a5fb8; font-family:inherit;}
 
 /* ---------- result ---------- */
 #result{padding:32px 16px 60px;}
@@ -791,15 +803,15 @@ function revealFamilyCard(i){
       <div class="fam-card">
         <div class="f-name">${L(p.fam.name)}</div>
         <div class="f-story">${L(p.fam.story)}</div>
-        <div class="f-story" style="opacity:.85">🌅 <b>${ja ? "あなたの朝" : "Your morning"}</b>：${L(p.fam.asa)}</div>
+        <div class="f-story f-asa">🌅 <b>${ja ? "あなたの朝" : "Your morning"}</b>：${L(p.fam.asa)}</div>
         <div class="f-stats">
-          <span>💰 ${ja ? "はじめのおかね" : "Starting money"}：<b>${fm(p.money)}</b></span>
-          <span>🍚 ${ja ? "1日の生活費" : "Daily living cost"}：<b>${L(p.fam.daily)}</b>${p.fam.dailyNote ? "（"+L(p.fam.dailyNote)+"）" : ""}</span>
-          <span>💼 ${ja ? "おしごとの基本給" : "Base pay"}：<b>${fm(p.fam.wage)}</b>（${ja ? "＋まなび×" : "＋Learn×"}<b>${fm(p.fam.rural?5:10)}</b>）</span>
-          <span>📮 ${ja ? "仕送り" : "Allowance"}：<b>${p.allow>0 ? (ja ? "毎回のかせぎ +"+fm(p.allow) : "+"+fm(p.allow)+" per payday") : (ja ? "なし" : "none")}</b></span>
-          <span>🌍 ${ja ? "生まれた場所" : "Born in"}：<b>${L(p.fam.region)}</b></span>
-          <span>👁 ${ja ? "まだ見えていない選択肢" : "Options you can't see yet"}：<b>${hiddenN}</b>${hiddenN>0 ? (ja ? "個（そのマスでは「？？？」と表示されます）" : " (shown as ？？？ on those squares)") : ""}</span>
-          <span>✨ ${ja ? "とくい" : "Strength"}：<b>${L(p.fam.perkText)}</b></span>
+          <span class="fs-money">💰 ${ja ? "はじめのおかね" : "Starting money"}：<b>${fm(p.money)}</b></span>
+          <span class="fs-daily">🍚 ${ja ? "1日の生活費" : "Daily living cost"}：<b>${L(p.fam.daily)}</b>${p.fam.dailyNote ? "（"+L(p.fam.dailyNote)+"）" : ""}</span>
+          <span class="fs-wage">💼 ${ja ? "おしごとの基本給" : "Base pay"}：<b>${fm(p.fam.wage)}</b>（${ja ? "＋まなび×" : "＋Learn×"}<b>${fm(p.fam.rural?5:10)}</b>）</span>
+          <span class="fs-allow">📮 ${ja ? "仕送り" : "Allowance"}：<b>${p.allow>0 ? (ja ? "毎回のかせぎ +"+fm(p.allow) : "+"+fm(p.allow)+" per payday") : (ja ? "なし" : "none")}</b></span>
+          <span class="fs-region">🌍 ${ja ? "生まれた場所" : "Born in"}：<b>${L(p.fam.region)}</b></span>
+          <span class="fs-hidden">👁 ${ja ? "まだ見えていない選択肢" : "Options you can't see yet"}：<b>${hiddenN}</b>${hiddenN>0 ? (ja ? "個（そのマスでは「？？？」と表示されます）" : " (shown as ？？？ on those squares)") : ""}</span>
+          <span class="fs-perk">✨ ${ja ? "とくい" : "Strength"}：<b>${L(p.fam.perkText)}</b></span>
         </div>
       </div>
       <button class="m-btn" id="mNext">${ja
