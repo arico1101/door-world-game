@@ -86,6 +86,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 .pcard.now{opacity:1; outline:3px solid var(--orange);}
 .pcard.done{opacity:.45;}
 .pcard .nm{font-weight:900; font-size:14px; display:flex; align-items:center; gap:6px; margin-bottom:4px;}
+.pcard .age{margin-left:auto; font-size:11px; font-weight:700; opacity:.55;}
 .pcard .nm .p-dot{width:13px;height:13px;}
 .pcard .stat{display:flex; justify-content:space-between; font-weight:700;}
 .pcard .stat b{font-family:"DotGothic16",monospace; font-size:14px;}
@@ -99,17 +100,41 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   font-size:clamp(9px,1.4vw,12px); font-weight:700; text-align:center; padding:4px;
 }
 .sq .num{position:absolute; top:4px; left:7px; font-family:"DotGothic16",monospace; font-size:11px; opacity:.5;}
+.chapter{
+  display:flex; align-items:center; gap:8px; padding:6px 4px 0;
+  font-size:11px; font-weight:900; letter-spacing:.06em; opacity:.65; white-space:nowrap;
+}
+.chapter::after{content:""; flex:1; height:2px; background:rgba(74,58,48,.15); border-radius:2px;}
+.ch-note{font-size:10.5px; font-weight:700; opacity:.8; background:var(--paper); border:1.5px solid rgba(74,58,48,.3); border-radius:999px; padding:2px 10px;}
 .sq .ic{font-size:clamp(14px,2.4vw,22px); line-height:1;}
 .sq.t-income{background:#EDF7DC; border-color:var(--green);}
 .sq.t-cost{background:#FFE9E7; border-color:var(--crimson);}
 .sq.t-event{background:#FFF3DC; border-color:var(--orange);}
 .sq.t-learn{background:#E0F4F8; border-color:var(--teal);}
-.sq.t-choice{background:var(--brown); color:var(--cream); border-color:var(--brown);}
-.sq.t-choice .num{color:var(--cream); opacity:.6;}
+.sq.t-choice{
+  background:radial-gradient(circle at 50% 32%, #6B5540, var(--brown) 78%);
+  color:var(--cream); border-color:var(--orange); border-width:3px;
+  box-shadow:var(--shadow), 0 0 0 3px rgba(255,192,75,.28);
+  animation:doorGlow 2.6s ease-in-out infinite;
+}
+@keyframes doorGlow{
+  0%,100%{box-shadow:var(--shadow), 0 0 0 3px rgba(255,192,75,.22);}
+  50%{box-shadow:var(--shadow), 0 0 0 5px rgba(255,192,75,.5);}
+}
+.sq.t-choice::after{content:"✦"; position:absolute; top:4px; right:7px; font-size:11px; color:var(--orange);}
+.sq.t-choice .ic{font-size:clamp(18px,3vw,26px); filter:drop-shadow(0 0 5px rgba(255,192,75,.7));}
+.sq.t-choice .num{color:var(--orange); opacity:1;}
 .sq.t-start,.sq.t-goal{background:var(--cream); border-width:3px;}
 .sq .tokens{position:absolute; bottom:3px; left:0; right:0; display:flex; justify-content:center; gap:2px; flex-wrap:wrap; padding:0 3px;}
-.tok{width:clamp(10px,1.8vw,16px); height:clamp(10px,1.8vw,16px); border-radius:50%; border:2px solid var(--brown); box-shadow:0 2px 0 rgba(74,58,48,.3); transition:transform .15s;}
-.tok.hop{transform:translateY(-5px) scale(1.2);}
+.tok{
+  width:clamp(20px,3vw,28px); height:clamp(20px,3vw,28px);
+  filter:drop-shadow(0 2px 0 rgba(74,58,48,.35));
+  transition:transform .15s;
+}
+.tok svg{width:100%; height:100%; display:block;}
+.tok + .tok{margin-left:-8px;}
+.tok.now{transform:scale(1.25); z-index:2;}
+.tok.hop{transform:translateY(-6px) scale(1.35);}
 .controls{
   position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   display:flex; justify-content:center; z-index:50; pointer-events:none;
@@ -168,6 +193,16 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 .rv-d{font-size:12px; opacity:.8; line-height:1.6;}
 .rv-meta{font-size:12px; font-weight:700;}
 .rv-st{flex:none; font-size:11px; font-weight:900; opacity:.75; padding-top:3px;}
+.rv-who{display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-top:5px; font-size:11px; font-weight:900;}
+.who{
+  display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+  background:var(--paper); border:1.5px solid rgba(74,58,48,.25); border-radius:999px; padding:1px 8px;
+}
+.who .p-dot{width:10px; height:10px; border-width:1.5px;}
+.rv-untrod{
+  font-size:10.5px; font-weight:700; margin-left:8px; vertical-align:2px;
+  background:#E7E0D6; border-radius:999px; padding:2px 10px;
+}
 
 /* ---------- modal ---------- */
 .overlay{
@@ -193,9 +228,10 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   padding:10px 14px; font-size:13.5px; font-weight:700; line-height:1.8; margin-bottom:14px;
 }
 .fx-line{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px;}
+/* フォントのルール: DotGothic16は数値データ（サイコロ・ステータス値・年齢）のみ。文章はすべてZen Maru */
 .fx{
   background:var(--paper); border:2px solid var(--brown); border-radius:999px;
-  padding:5px 14px; font-weight:900; font-size:14px; font-family:"DotGothic16",monospace;
+  padding:5px 14px; font-weight:900; font-size:14px;
 }
 .door-list{display:flex; flex-direction:column; gap:12px; margin-bottom:8px;}
 .door{
@@ -221,6 +257,10 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   background:var(--brown); color:var(--cream); border-radius:999px; padding:2px 10px;
 }
 .door:disabled:not(.unseen) .d-key{background:var(--crimson);}
+.d-key.d-cost{background:var(--paper); margin-left:6px;}
+.d-key.d-cost.minus{color:#d24a3c; border:1.5px solid #d24a3c;}
+.d-key.d-cost.plus{color:#5a9114; border:1.5px solid #5a9114;}
+.door:disabled:not(.unseen) .d-key.d-cost{background:var(--paper);}
 .m-btn{
   display:block; margin:8px auto 0; background:var(--brown); color:var(--cream);
   font-size:17px; font-weight:900; padding:13px 42px; border-radius:999px;
@@ -277,7 +317,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   <div class="setup-card">
     <div class="title-door" aria-hidden="true"><div class="leaf"></div><div class="knob"></div></div>
     <h1 class="game-title">トビラ</h1>
-    <p class="game-sub">🌍 せかい版 ─ 世界の遺児と、おかねと選択肢の人生すごろく（2〜6人・約25分）</p>
+    <p class="game-sub">🌍 せかい版 ─ 世界のどこかで6歳から35歳を生きる、おかねと選択肢の人生すごろく（2〜6人・約25分）</p>
     <div class="player-inputs" id="playerInputs"></div>
     <div class="row-btns">
       <button class="chip-btn" id="addPlayer">＋ プレイヤーを追加</button>
@@ -309,7 +349,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   <div class="controls">
     <button class="dice-btn" id="diceBtn">
       <span class="dice-face" id="diceFace">?</span>
-      <span>サイコロを回す</span>
+      <span id="diceLabel">サイコロを回す</span>
     </button>
   </div>
 </section>
@@ -318,8 +358,11 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 <section id="result" class="screen">
   <div class="res-inner">
     <h1>🎉 けっか はっぴょう</h1>
-    <p class="res-sub">順位は「ハッピー」の数で決まります — そして、家庭カードの公開</p>
+    <p class="res-sub">6歳から35歳、29年間のけっか。順位は「ハッピー」の数で決まります — そして、家庭カードの公開</p>
     <div id="resultList"></div>
+    <div style="text-align:center; margin-bottom:10px">
+      <button class="chip-btn" id="allDoorsBtn">🚪 29年間のトビラ一覧を見る</button>
+    </div>
     <div class="insight" id="insightBox"></div>
     <div class="res-btns"><button class="big-btn" id="againBtn">もういちど遊ぶ</button></div>
   </div>
@@ -339,7 +382,7 @@ const TYPE_META = {
   goal:{label:"ゴール", ic:"🏁", tag:"#4A3A30"},
   income:{label:"おしごと", ic:"💰", tag:"#78BE21"},
   cost:{label:"しゅっぴ", ic:"💸", tag:"#FF6858"},
-  event:{label:"できごと", ic:"🎴", tag:"#FFC04B"},
+  event:{label:"できごと", ic:"⚡", tag:"#FFC04B"},
   learn:{label:"まなび", ic:"📚", tag:"#00A3BD"},
   choice:{label:"トビラ", ic:"🚪", tag:"#4A3A30"},
   heavy:{label:"できごと", ic:"⚠️", tag:"#4A3A30"},
@@ -386,12 +429,31 @@ const FAMILIES = [
    perkText:"出会いがチカラになる：「支援」の選択肢がはじめて見えたとき、まなび+1＆支援・まなび系のカギが −50万 になる"},
 ];
 
+/* 各マスの年齢（6歳→35歳の29年間） */
+const AGES = [
+  6,8,10,12,15,16,
+  16,17,17,18,18,19,
+  20,21,22,22,23,24,
+  24,25,25,26,27,28,
+  28,29,30,31,32,32,
+  33,33,34,34,35,35,
+];
+/* 盤面の行＝人生の章 */
+const CHAPTERS = [
+  {t:"🌱 子ども時代 ── 6〜16歳", note:"15歳までは1マスずつ。人生の土台の時間だ"},
+  {t:"🏫 10代後半 ── 道がわかれはじめる"},
+  {t:"💼 20代前半 ── 道を選ぶ"},
+  {t:"🚀 20代なかば ── 広がる世界"},
+  {t:"📚 30歳前後 ── 学びなおしと挑戦"},
+  {t:"🌅 30代なかば ── 積み重ねの先に"},
+];
+
 /* 盤面 36マス */
 const SQUARES = [
   {t:"start", name:"スタート"},
-  {t:"income", name:"初めてのかせぎ", fixed:15},
-  {t:"event"},
-  {t:"learn"},
+  {t:"income", name:"はじめてのお手伝い", fixed:15, stop:true},
+  {t:"event", stop:true},
+  {t:"learn", stop:true},
   {t:"choice", name:"進学", key:"shinro", stop:true},
   {t:"income", name:"おしごと"},
   {t:"event"},
@@ -432,32 +494,32 @@ function choiceDef(key, p){
     case "shinro": return {
       title:"進学のトビラ", body:"学校を卒業。ここから先の道を選ぼう。",
       opts:[
-        {t:"上の学校へ進学する（自費）", d:"学費を家のお金で払ってまなぶ。世界がひろがる", req:{money:200}, fx:{money:-200, learn:3, happy:1}},
-        {t:"奨学金・支援団体の力で進学する", d:"「返さなくていい奨学金」を知っていることがチカラになる", tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}},
+        {t:"上の学校へ進学する（自費）", d:"学費を家のお金で払ってまなぶ。世界がひろがる", req:{money:150}, fx:{money:-150, learn:3, happy:1}},
+        {t:"奨学金・支援団体の力で進学する", d:"はたらきはじめたら、すこしずつ返す。支援を知っていれば、返さなくていい奨学金に出会えることも", tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}, special:"shogakukin"},
         {t:"働いて家族を支える", d:"畑や店で働き、現場で経験を積む", req:{}, fx:{money:80, learn:1}},
       ]};
     case "kurashi":
       if(p.fam.rural) return {
-        title:"くらしのトビラ", body:"毎日の水くみと、暗くなったら終わる勉強。くらしを変える？",
+        title:"くらしのトビラ", variant:"ウガンダ育ち", body:"毎日の水くみと、暗くなったら終わる勉強。くらしを変える？",
         opts:[
           {t:"雨水タンクとソーラーランプを入れる", d:"水くみの時間が、勉強の時間に変わる", req:{money:50}, fx:{money:-50, learn:1, happy:2}},
           {t:"いままでどおりの暮らしを続ける", d:"お金はかからない。そのぶん時間はかかる", req:{}, fx:{money:20}},
         ]};
       return {
-        title:"くらしのトビラ", body:"そろそろ自分の暮らしを考えたい。",
+        title:"くらしのトビラ", variant:"欧米・日本育ち", body:"そろそろ自分の暮らしを考えたい。",
         opts:[
           {t:"ひとり暮らしを始める", d:"自由と責任。自分の生活をつくる", req:{money:100}, fx:{money:-100, learn:1, happy:2}},
           {t:"実家でしっかり貯金", d:"堅実もりっぱな選択", req:{}, fx:{money:50}},
         ]};
     case "machi":
       if(p.fam.rural) return {
-        title:"まちのトビラ", body:"村を出るか、残るか。人生の分かれ道。",
+        title:"まちのトビラ", variant:"ウガンダ育ち", body:"村を出るか、残るか。人生の分かれ道。",
         opts:[
           {t:"首都カンパラに出る", d:"生活費は上がる。でも、見える世界が変わる", req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll"},
           {t:"村で暮らしつづける", d:"顔見知りと、慣れた畑。生活費は安い", req:{}, fx:{money:20, happy:1}},
         ]};
       return {
-        title:"まちのトビラ", body:"進学・しごと・暮らし。どこで生きていく？",
+        title:"まちのトビラ", variant:"欧米・日本育ち", body:"進学・しごと・暮らし。どこで生きていく？",
         opts:[
           {t:"大都市に住みつづける", d:"情報も出会いも多い。そのぶん生活費が高い", req:{}, fx:{money:-30, happy:1}},
           {t:"家賃の安い郊外へ", d:"浮いたお金は貯金にまわす", req:{}, fx:{money:30}},
@@ -594,7 +656,7 @@ $("startBtn").onclick = ()=>{
       pos:0, money:fam.money, initMoney:fam.money,
       allow:fam.allow, learn:1 + ((fam.perk==="kinben"||fam.perk==="kokusai")?1:0), happy:0,
       hidden:new Set(fam.hide),
-      open:0, locked:0, unseen:0, doorLog:[],
+      open:0, locked:0, unseen:0, doorLog:[], loan:0,
       shienDiscount:false, shienUsed:false, deaiUsed:false,
       hadHeavy:false, disasterTurns:0, letterIn:null,
       done:false, rankAt:null,
@@ -653,14 +715,23 @@ function gridPos(i){
 function renderBoard(){
   const b = $("board");
   b.innerHTML = "";
+  CHAPTERS.forEach((c,r)=>{
+    const lab = document.createElement("div");
+    lab.className = "chapter";
+    lab.style.gridRow = r*2+1;
+    lab.style.gridColumn = "1 / -1";
+    lab.innerHTML = c.t + (c.note ? `<span class="ch-note">${c.note}</span>` : "");
+    b.appendChild(lab);
+  });
   SQUARES.forEach((sq,i)=>{
     const m = TYPE_META[sq.t];
     const el = document.createElement("div");
     el.className = `sq t-${sq.t}`;
     el.id = `sq-${i}`;
     const {row,col} = gridPos(i);
-    el.style.gridRow = row+1; el.style.gridColumn = col+1;
-    el.innerHTML = `<span class="num">${i}</span><span class="ic">${m.ic}</span><span>${sq.name || m.label}</span><div class="tokens"></div>`;
+    el.style.gridRow = row*2+2; el.style.gridColumn = col+1;
+    const ageLabel = (sq.t === "choice" || sq.t === "start" || sq.t === "goal") ? `<span class="num">${AGES[i]}歳</span>` : "";
+    el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${sq.name || m.label}</span><div class="tokens"></div>`;
     b.appendChild(el);
   });
 }
@@ -670,8 +741,11 @@ function renderTokens(){
     const holder = document.querySelector(`#sq-${p.pos} .tokens`);
     if(!holder) return;
     const tk = document.createElement("span");
-    tk.className = "tok"; tk.id = `tok-${idx}`;
-    tk.style.background = p.color;
+    tk.className = "tok" + (idx === turn && !p.done ? " now" : ""); tk.id = `tok-${idx}`;
+    tk.innerHTML = `<svg viewBox="0 0 24 26">
+      <circle cx="12" cy="7" r="5.5" fill="${p.color}" stroke="#4A3A30" stroke-width="2"/>
+      <path d="M12 13.5c-5.2 0-8.5 3.6-8.5 8.5V24h17v-2c0-4.9-3.3-8.5-8.5-8.5z" fill="${p.color}" stroke="#4A3A30" stroke-width="2" stroke-linejoin="round"/>
+    </svg>`;
     holder.appendChild(tk);
   });
 }
@@ -683,7 +757,7 @@ function renderStrip(){
     c.className = "pcard" + (i===turn?" now":"") + (p.done?" done":"");
     c.id = `pcard-${i}`;
     c.innerHTML = `
-      <div class="nm"><span class="p-dot" style="background:${p.color}"></span>${p.name}${p.done?" 🏁":""}</div>
+      <div class="nm"><span class="p-dot" style="background:${p.color}"></span>${p.name}${p.done?" 🏁":""}<span class="age">${AGES[p.pos]}歳</span></div>
       <div class="stat"><span>おかね</span><b class="${p.money<0?"neg":""}">${p.money}万</b></div>
       <div class="stat"><span>まなび</span><b>${"★".repeat(Math.min(p.learn,8))}${p.learn>8?"+":""}</b></div>
       <div class="stat"><span>ハッピー</span><b>♥${p.happy}</b></div>`;
@@ -692,8 +766,8 @@ function renderStrip(){
 }
 function updateTurnUI(){
   const p = players[turn];
-  $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${p.name} さんの番`;
-  renderStrip();
+  $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${p.name} さんの番・${AGES[p.pos]}歳`;
+  renderStrip(); renderTokens();
   const card = $(`pcard-${turn}`);
   if(card) card.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
 }
@@ -714,14 +788,22 @@ function beginTurn(){
   busy = false;
   $("diceBtn").disabled = false;
   $("diceFace").textContent = "?";
+  /* 子ども時代(進学の手前まで)はサイコロを使わず1マスずつ */
+  const hs = p.pos < 4;
+  $("diceFace").style.display = hs ? "none" : "grid";
+  $("diceLabel").textContent = hs ? "🧒 一歩すすむ" : "サイコロを回す";
 }
 
 $("diceBtn").onclick = async ()=>{
   if(busy) return;
   busy = true;
   $("diceBtn").disabled = true;
-  const n = await spinDice();
-  await movePlayer(turn, n);
+  if(players[turn].pos < 4){
+    await movePlayer(turn, 1);
+  } else {
+    const n = await spinDice();
+    await movePlayer(turn, n);
+  }
 };
 
 function spinDice(){
@@ -758,21 +840,39 @@ async function movePlayer(idx, steps){
 }
 
 /* ===================== square resolution ===================== */
+/* ★まなびの数（＝かせぎ）に応じたいまのしごと */
+function jobTitle(p){
+  const L = p.learn;
+  if(L <= 1) return {ic:"🌾", t:"畑・市場の手伝い"};
+  if(L <= 2) return {ic:"🔧", t:"見習い・日雇いのしごと"};
+  if(L <= 3) return {ic:"🧵", t:"縫製・工房のスタッフ"};
+  if(L <= 4) return {ic:"🏪", t:"お店のリーダー"};
+  if(L <= 5) return {ic:"💻", t:"専門職・エンジニア"};
+  if(L <= 6) return {ic:"🏢", t:"国際企業のスタッフ"};
+  return {ic:"👑", t:"マネージャー・専門家"};
+}
 function resolveSquare(idx){
   const p = players[idx];
   const sq = SQUARES[p.pos];
   if(sq.t === "income"){
-    let amt, note;
+    let amt, note, title = sq.name || "おしごと";
     if(sq.fixed != null){
       amt = sq.fixed;
       note = "はじめての、自分のかせぎ！";
     } else {
       amt = p.fam.wage + p.learn*10 + p.allow;
-      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×10万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b>`;
+      const job = jobTitle(p);
+      title = `${job.ic} ${AGES[p.pos]}歳・いまのしごと：${job.t}`;
+      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×10万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`;
       if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——`;
       if(p.disasterTurns > 0){ amt -= 10; note += `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`; }
+      if(p.loan > 0){
+        const pay = Math.min(6, p.loan);
+        p.loan -= pay; amt -= pay;
+        note += `<br>🎓 奨学金の返済 −${pay}万（のこり${p.loan}万）`;
+      }
     }
-    showInfoModal("income", sq.name || "おしごと", note, {money:amt}, idx);
+    showInfoModal("income", title, note, {money:amt}, idx);
   }
   else if(sq.t === "cost"){
     showInfoModal("cost", sq.name, "生きているとお金はかかる。固定費、だいじ。", {money:-sq.amt}, idx);
@@ -973,7 +1073,8 @@ function reqLabel(p, o){
   return parts.join(" ＋ ");
 }
 function meetsReq(p, o){
-  if(effectiveMoneyReq(p, o) > p.money) return false;
+  const em = effectiveMoneyReq(p, o);
+  if(em > 0 && em > p.money) return false;  /* カギなし(0円)の選択肢は借金中でも選べる */
   if(effectiveLearnReq(p, o) > p.learn) return false;
   return true;
 }
@@ -985,7 +1086,7 @@ function showChoiceModal(idx, def, type, skipCount){
     if(o.tag && p.hidden.has(o.tag)) return "unseen";
     return meetsReq(p, o) ? "open" : "locked";
   });
-  const logEntry = {title:def.title, opts:def.opts, states, chosen:null};
+  const logEntry = {title:def.title, variant:def.variant, age:AGES[p.pos], opts:def.opts, states, chosen:null};
   if(!skipCount){
     states.forEach(s=>{
       if(s === "unseen") p.unseen++;
@@ -1001,26 +1102,36 @@ function showChoiceModal(idx, def, type, skipCount){
         <span class="d-icon">❓</span>
         <span class="d-main">
           <span class="d-title">？？？</span>
-          <span class="d-desc">この選択肢は、まだ見えていない。</span>
+          <span class="d-desc">この選択肢は、見えない。</span>
         </span>
       </button>`;
     }
     const key = reqLabel(p, o);
     const ok = st === "open";
+    /* お金の増減だけは選ぶ前に見せる（★とハートは選ぶまでのお楽しみ） */
+    const cost = o.fx.money
+      ? `<span class="d-key d-cost ${o.fx.money<0?"minus":"plus"}">${o.fx.money<0?"💸":"💰"} おかね ${o.fx.money>0?"+":""}${o.fx.money}万${o.special==="shogakukin"?"＋返済":""}</span>`
+      : "";
     return `<button class="door" data-i="${i}" ${ok?"":"disabled"}>
       <span class="d-icon">${ok?"🚪":"🔒"}</span>
       <span class="d-main">
         <span class="d-title">${o.t}</span>
         <span class="d-desc">${o.d}</span>
-        ${key?`<span class="d-key">カギ：${key}${ok?"":"（たりない…）"}</span>`:""}
+        ${key?`<span class="d-key">カギ：${key}${ok?"":"（たりない…）"}</span>`:""}${cost}
       </span>
     </button>`;
   }).join("");
+  const stuck = !states.includes("open");
   openModal(`
     <span class="m-tag" style="background:${m.tag}">${m.ic} ${def.heavy ? "できごと" : m.label}</span>
     <h2>${def.title}</h2>
-    <p class="m-body">${def.body}<br><b>${p.name}</b> さん：おかね ${p.money}万 ／ まなび ★${p.learn}</p>
-    <div class="door-list">${doors}</div>`);
+    <p class="m-body">${def.body}<br><b>${p.name}</b> さん（${AGES[p.pos]}歳）：おかね ${p.money}万 ／ まなび ★${p.learn}</p>
+    <div class="door-list">${doors}</div>
+    ${stuck ? `<div class="m-note" style="margin-top:14px">開けられるトビラが、ひとつもなかった…。</div>
+    <button class="m-btn" id="mPass">今回は見送る</button>` : ""}`);
+  if(stuck){
+    $("mPass").onclick = ()=>{ closeModal(); endTurn(); };
+  }
   document.querySelectorAll("#modalBox .door:not(:disabled)").forEach(btn=>{
     btn.onclick = ()=>{
       logEntry.chosen = +btn.dataset.i;
@@ -1046,6 +1157,14 @@ function showChoiceModal(idx, def, type, skipCount){
       if(o.special === "letter"){
         p.letterIn = 2;
       }
+      if(o.special === "shogakukin"){
+        if(p.shienDiscount || p.perk === "shienPro"){
+          notes.push("🎗 支援を知っていたおかげで<b>返さなくていい奨学金</b>に出会えた！");
+        } else {
+          p.loan = 48;
+          notes.push("🎓 これは<b>貸与型</b>（総額48万）。働きはじめたら、かせぎから<b>すこしずつ（−6万）</b>、35歳まで返していく。");
+        }
+      }
       if(o.tag === "shien" && p.perk === "shienPro" && !p.shienUsed){
         p.shienUsed = true;
         fx.learn = (fx.learn||0) + 1;
@@ -1065,14 +1184,18 @@ function showChoiceModal(idx, def, type, skipCount){
 
 function showGoalModal(idx){
   const p = players[idx];
+  const loanNote = p.loan > 0
+    ? `<div class="m-note">🎓 のこっていた奨学金 <b>${p.loan}万</b> をここで清算。<br>35歳——ようやく、返しおえた。</div>` : "";
   openModal(`
     <span class="m-tag" style="background:#4A3A30">🏁 ゴール</span>
-    <h2>${p.name} さん、ゴール！</h2>
-    <p class="m-body">${p.rankAt}番目のゴールです。おつかれさま！<br>全員がゴールしたら、けっか発表へ。</p>
-    ${fxChips({happy: p.rankAt===1?1:0})}
+    <h2>${p.name} さん、35歳でゴール！</h2>
+    <p class="m-body">6歳からの29年間、おつかれさま！ ${p.rankAt}番目のゴールです。<br>全員がゴールしたら、けっか発表へ。</p>
+    ${loanNote}
+    ${fxChips({happy: p.rankAt===1?1:0, money: p.loan>0 ? -p.loan : 0})}
     <button class="m-btn" id="mOk">OK</button>`);
   $("mOk").onclick = ()=>{
     if(p.rankAt === 1) p.happy += 1;
+    if(p.loan > 0){ p.money -= p.loan; p.loan = 0; }
     closeModal(); endTurn();
   };
 }
@@ -1126,6 +1249,7 @@ function showResult(){
   $("insightBox").innerHTML = `
     <b>■ ふりかえりタイム</b><br>
     順位を決めたのは、お金の多さじゃなくて <b>♥ハッピー</b>。<br>
+    ♥が多いということは——<b>人生の選択肢をたくさん持ち、じぶんの意思で選べた</b>ということ。<br>
     でも、♥を生むトビラのカギは、<b>生まれた場所</b>によってぜんぜん違った。<br><br>
     このテーブル全体で、<b>${totalUnseen}枚のトビラが「見えてすら いなかった」</b>。<br>
     それはウガンダの家庭だけの話じゃない——<b>支え合いのトビラ</b>は、めぐまれた家庭からこそ見えなかったはず。<br>
@@ -1175,7 +1299,7 @@ function showRevealModal(pIdx){
         <span class="rv-st">${label}</span>
       </div>`;
     }).join("");
-    return `<div class="rv-door"><div class="rv-title">${e.title}</div>${rows}</div>`;
+    return `<div class="rv-door"><div class="rv-title">${e.age != null ? e.age+"歳 ── " : ""}${e.title}${e.variant ? `（${e.variant}）` : ""}</div>${rows}</div>`;
   }).join("");
   openModal(`
     <div class="rule-page">
@@ -1190,6 +1314,73 @@ function showRevealModal(pIdx){
   $("rvOk").onclick = closeModal;
 }
 
+/* 全員分・年齢順のトビラ一覧 */
+function whoChips(list){
+  return list.map(p=>`<span class="who"><span class="p-dot" style="background:${p.color}"></span>${p.name}</span>`).join("");
+}
+function showAllDoorsModal(){
+  const map = new Map();
+  players.forEach(p=>{
+    p.doorLog.forEach(e=>{
+      const key = `${e.age}|${e.title}|${e.variant || ""}`;
+      if(!map.has(key)) map.set(key, {age:e.age, title:e.title, variant:e.variant, opts:e.opts,
+        perOpt:e.opts.map(()=>({chosen:[], locked:[], unseen:[]}))});
+      const g = map.get(key);
+      e.opts.forEach((o,i)=>{
+        if(e.chosen === i) g.perOpt[i].chosen.push(p);
+        else if(e.states[i] === "unseen") g.perOpt[i].unseen.push(p);
+        else if(e.states[i] === "locked") g.perOpt[i].locked.push(p);
+      });
+    });
+  });
+  /* だれも通らなかったトビラマスも一覧に載せる（くらし・まちはウガンダ育ち版と欧米・日本育ち版の両方） */
+  SQUARES.forEach((sq,i)=>{
+    if(sq.t !== "choice") return;
+    const variants = (sq.key === "machi" || sq.key === "kurashi") ? [true,false] : [true];
+    variants.forEach(rural=>{
+      const dummy = {fam:{rural}, perk:null, money:0, learn:0, shienDiscount:false, name:""};
+      const def = choiceDef(sq.key, dummy);
+      const key = `${AGES[i]}|${def.title}|${def.variant || ""}`;
+      if(!map.has(key)) map.set(key, {age:AGES[i], title:def.title, variant:def.variant, opts:def.opts,
+        perOpt:def.opts.map(()=>({chosen:[], locked:[], unseen:[]})), untrodden:true});
+    });
+  });
+  const groups = [...map.values()].sort((a,b)=>a.age-b.age);
+  const secs = groups.map(g=>{
+    const rows = g.opts.map((o,i)=>{
+      const st = g.perOpt[i];
+      const key = rawReqLabel(o);
+      const fx = fxInline(o.fx);
+      const lines = [];
+      if(st.chosen.length) lines.push(`<div class="rv-who">✅ えらんだ：${whoChips(st.chosen)}</div>`);
+      if(st.locked.length) lines.push(`<div class="rv-who">🔒 カギ不足：${whoChips(st.locked)}</div>`);
+      if(st.unseen.length) lines.push(`<div class="rv-who" style="color:#c77f00">👁 見えなかった：${whoChips(st.unseen)}</div>`);
+      return `<div class="rv-opt ${st.unseen.length ? "unseen" : ""}">
+        <span class="rv-main">
+          <span class="rv-t">${o.t}</span>
+          <span class="rv-d">${o.d}</span>
+          <span class="rv-meta">🔑 ${key || "カギなし"}${fx ? `　→ ${fx}` : ""}</span>
+          ${lines.join("")}
+        </span>
+      </div>`;
+    }).join("");
+    return `<div class="rv-door"${g.untrodden ? ' style="opacity:.75"' : ""}>
+      <div class="rv-title">🚪 ${g.age}歳 ── ${g.title}${g.variant ? `（${g.variant}）` : ""}${g.untrodden ? '<span class="rv-untrod">🚶 だれも通らなかった</span>' : ""}</div>${rows}</div>`;
+  }).join("");
+  openModal(`
+    <div class="rule-page">
+      <button class="rule-close" id="adClose" aria-label="とじる">✕</button>
+      <span class="m-tag" style="background:var(--brown)">🚪 トビラ一覧</span>
+      <h2>29年間に、こんなトビラがあった</h2>
+      <p class="m-body">年齢の順に、この人生にあったトビラをぜんぶ並べた。<br>出会えたトビラも、通らなかったトビラも——見えていた景色は人それぞれ。</p>
+      <div class="rv-list">${secs || "<p class='m-body'>記録がありません。</p>"}</div>
+      <button class="m-btn" id="adOk">とじる</button>
+    </div>`);
+  $("adClose").onclick = closeModal;
+  $("adOk").onclick = closeModal;
+}
+$("allDoorsBtn").onclick = showAllDoorsModal;
+
 /* ===================== rules ===================== */
 const RULE_PAGES = [
   {tag:"🌍 このゲームは", title:"世界のどこかに、生まれる", items:[
@@ -1198,9 +1389,10 @@ const RULE_PAGES = [
     ["🚪","同じマスに止まっても、開けられるトビラ・見えるトビラがちがうかも。理由は、遊びおわってから分かります。"],
   ]},
   {tag:"🏁 めざすもの", title:"順位を決めるのは ♥ハッピー", items:[
-    ["🎲","サイコロを回してすごろくを進み、みんなでゴールをめざそう。"],
+    ["🎲","これは<b>6歳から35歳までの29年間</b>をたどる人生すごろく。サイコロを回して、みんなでゴールをめざそう。"],
+    ["🧒","<b>子ども時代（6〜15歳）はサイコロを使わず、1マスずつ</b>進む。人生の土台をつくる時間だ。"],
     ["♥","最後の順位は、おかねの多さじゃなく <b>♥ハッピーの数</b>で決まる！"],
-    ["🚪","♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。"],
+    ["🚪","♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。<b>♥の数＝じぶんの意思で選べた数</b>だ。"],
   ]},
   {tag:"🚪 トビラとカギ", title:"いい選択には「カギ」がいる", items:[
     ["🚪","茶色い<b>トビラのマス</b>に止まると、人生の選択がやってくる。"],
