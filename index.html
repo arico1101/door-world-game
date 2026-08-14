@@ -51,6 +51,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 .p-row .rm{background:transparent; font-size:18px; color:var(--crimson); font-weight:900; padding:2px 6px;}
 .row-btns{display:flex; gap:10px; justify-content:center; margin-bottom:18px;}
 .chip-btn{background:var(--paper); border:2px solid var(--brown); border-radius:999px; padding:8px 18px; font-weight:700; font-size:14px; color:var(--brown); box-shadow:var(--shadow);}
+.chip-btn.on{background:var(--orange);}
 .fac-toggle{
   display:flex; align-items:flex-start; gap:8px; text-align:left;
   background:var(--paper); border:2px dashed var(--brown); border-radius:14px;
@@ -317,7 +318,11 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   <div class="setup-card">
     <div class="title-door" aria-hidden="true"><div class="leaf"></div><div class="knob"></div></div>
     <h1 class="game-title">トビラ</h1>
-    <p class="game-sub">🌍 せかい版 ─ 世界のどこかで6歳から35歳を生きる、おかねと選択肢の人生すごろく（2〜6人・約25分）</p>
+    <p class="game-sub" id="gameSub">🌍 せかい版 ─ 世界のどこかで6歳から35歳を生きる、おかねと選択肢の人生すごろく（2〜6人・約25分）</p>
+    <div class="row-btns">
+      <button class="chip-btn on" id="langJa">🇯🇵 日本語</button>
+      <button class="chip-btn" id="langEn">🌐 English</button>
+    </div>
     <div class="player-inputs" id="playerInputs"></div>
     <div class="row-btns">
       <button class="chip-btn" id="addPlayer">＋ プレイヤーを追加</button>
@@ -325,11 +330,11 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
     </div>
     <label class="fac-toggle">
       <input type="checkbox" id="heavyToggle">
-      <span>⚠️ 死別・干ばつなどのライフイベントを含める<br>
+      <span id="heavyLabel">⚠️ 死別・干ばつなどのライフイベントを含める<br>
       <small>ファシリテーター向け設定。参加者の状況にあわせてONにしてください。</small></span>
     </label>
     <button class="big-btn" id="startBtn">スタート！</button>
-    <p class="setup-note">
+    <p class="setup-note" id="setupNote">
       はじめに、それぞれが<b>「家庭カード」</b>をこっそり引きます。<br>
       生まれる国と家庭は、自分では選べない。<br>
       1台の画面を囲んで、順番にサイコロを回して遊ぼう。
@@ -340,7 +345,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 <!-- ========== GAME ========== -->
 <section id="game" class="screen">
   <div class="topbar">
-    <div class="logo">🌍 トビラ せかい版</div>
+    <div class="logo" id="logoTxt">🌍 トビラ せかい版</div>
     <div class="turn-pill" id="turnPill"></div>
     <button class="help-btn" id="helpBtnGame" aria-label="あそびかた">？</button>
   </div>
@@ -357,8 +362,8 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 <!-- ========== RESULT ========== -->
 <section id="result" class="screen">
   <div class="res-inner">
-    <h1>🎉 けっか はっぴょう</h1>
-    <p class="res-sub">6歳から35歳、29年間のけっか。順位は「ハッピー」の数で決まります — そして、家庭カードの公開</p>
+    <h1 id="resTitle">🎉 けっか はっぴょう</h1>
+    <p class="res-sub" id="resSub">6歳から35歳、29年間のけっか。順位は「ハッピー」の数で決まります — そして、家庭カードの公開</p>
     <div id="resultList"></div>
     <div style="text-align:center; margin-bottom:10px">
       <button class="chip-btn" id="allDoorsBtn">🚪 29年間のトビラ一覧を見る</button>
@@ -378,55 +383,67 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 /* ===================== data ===================== */
 const PCOLORS = ["#78BE21","#FF6858","#FFC04B","#00A3BD","#B58BD9","#F291B5"];
 const TYPE_META = {
-  start:{label:"スタート", ic:"🌱", tag:"#78BE21"},
-  goal:{label:"ゴール", ic:"🏁", tag:"#4A3A30"},
-  income:{label:"おしごと", ic:"💰", tag:"#78BE21"},
-  cost:{label:"しゅっぴ", ic:"💸", tag:"#FF6858"},
-  event:{label:"できごと", ic:"⚡", tag:"#FFC04B"},
-  learn:{label:"まなび", ic:"📚", tag:"#00A3BD"},
-  choice:{label:"トビラ", ic:"🚪", tag:"#4A3A30"},
-  heavy:{label:"できごと", ic:"⚠️", tag:"#4A3A30"},
-  fam:{label:"家庭カード", ic:"🏠", tag:"#00A3BD"},
+  start:{label:{ja:"スタート",en:"Start"}, ic:"🌱", tag:"#78BE21"},
+  goal:{label:{ja:"ゴール",en:"Goal"}, ic:"🏁", tag:"#4A3A30"},
+  income:{label:{ja:"おしごと",en:"Work"}, ic:"💰", tag:"#78BE21"},
+  cost:{label:{ja:"しゅっぴ",en:"Expense"}, ic:"💸", tag:"#FF6858"},
+  event:{label:{ja:"できごと",en:"Event"}, ic:"⚡", tag:"#FFC04B"},
+  learn:{label:{ja:"まなび",en:"Learning"}, ic:"📚", tag:"#00A3BD"},
+  choice:{label:{ja:"トビラ",en:"Door"}, ic:"🚪", tag:"#4A3A30"},
+  heavy:{label:{ja:"できごと",en:"Event"}, ic:"⚠️", tag:"#4A3A30"},
+  fam:{label:{ja:"家庭カード",en:"Family Card"}, ic:"🏠", tag:"#00A3BD"},
 };
 
-/* 家庭カード(5種) hide: shien=支援・奨学金 / chiiki=支え合い / career=しごと / global=海外 */
+/* 家庭カード(6種) hide: shien=支援・奨学金 / chiiki=支え合い / career=しごと / global=海外 */
 const FAMILIES = [
-  {id:"w1", name:"欧米に生まれた家庭", region:"欧米", rural:false, money:150, allow:10, wage:20,
+  {id:"w1", name:{ja:"欧米に生まれた家庭",en:"A family in a Western country"}, region:{ja:"欧米",en:"a Western country"}, rural:false, money:150, allow:10, wage:20,
    hide:["chiiki"], perk:"eigo",
-   daily:"約8,000円", dailyNote:"",
-   asa:"スクールバスで10分。朝食はシリアルとオレンジジュース。",
-   story:"学校に行くのは「当たり前」。図書館もネットも、ぜんぶそろっている。ただ、となりの家の人の名前は、じつは知らない。",
-   perkText:"英語ネイティブ：海外・留学系のトビラの ★のカギが2つ軽くなる"},
-  {id:"w2", name:"日本に生まれた家庭", region:"日本", rural:false, money:120, allow:5, wage:20,
+   daily:{ja:"約8,000円",en:"about ¥8,000"}, dailyNote:"",
+   asa:{ja:"スクールバスで10分。朝食はシリアルとオレンジジュース。",en:"A 10-minute school bus ride. Cereal and orange juice for breakfast."},
+   story:{ja:"学校に行くのは「当たり前」。図書館もネットも、ぜんぶそろっている。ただ、となりの家の人の名前は、じつは知らない。",
+          en:"Going to school is just \"normal\". Libraries, internet — it's all there. But honestly, you don't know your neighbor's name."},
+   perkText:{ja:"英語ネイティブ：海外・留学系のトビラの ★のカギが2つ軽くなる",
+             en:"Native English: study-abroad doors need 2 fewer ★"}},
+  {id:"w2", name:{ja:"日本に生まれた家庭",en:"A family in Japan"}, region:{ja:"日本",en:"Japan"}, rural:false, money:120, allow:5, wage:20,
    hide:["chiiki","shien"], perk:"kinben",
-   daily:"約6,000円", dailyNote:"",
-   asa:"7時に起きて、電車で20分。コンビニに寄る余裕もある。",
-   story:"教科書は無料で、学校には給食もある。塾にも通わせてもらった。「支援」や「奨学金」は、自分には関係ない言葉だと思っていた。",
-   perkText:"コツコツ力：はじめから まなび+1／独学の効果が上がる"},
-  {id:"w3", name:"ウガンダの、両親がそろっている家庭", region:"ウガンダ", rural:true, money:40, allow:0, wage:10,
+   daily:{ja:"約6,000円",en:"about ¥6,000"}, dailyNote:"",
+   asa:{ja:"7時に起きて、電車で20分。コンビニに寄る余裕もある。",en:"Up at 7, a 20-minute train ride — with time to stop at a convenience store."},
+   story:{ja:"教科書は無料で、学校には給食もある。塾にも通わせてもらった。「支援」や「奨学金」は、自分には関係ない言葉だと思っていた。",
+          en:"Textbooks are free and school serves lunch. Your parents even paid for cram school. \"Aid\" and \"scholarships\" felt like words for somebody else."},
+   perkText:{ja:"コツコツ力：はじめから まなび+1／独学の効果が上がる",
+             en:"Steady learner: start with Learn +1 / self-study works better"}},
+  {id:"w3", name:{ja:"ウガンダの、両親がそろっている家庭",en:"A Ugandan family with both parents"}, region:{ja:"ウガンダ",en:"Uganda"}, rural:true, money:40, allow:0, wage:10,
    hide:["shien","career","global"], perk:"tasukeai",
-   daily:"約400円", dailyNote:"学費を払う月は、ここからさらに減る",
-   asa:"5時起き。水くみに1時間、畑を手伝ってから、5km歩いて学校へ。",
-   story:"学費を払う月はたいへんだ。でも困ったときは、村のみんなが助けてくれる。",
-   perkText:"支え合い：情報が手に入るできごとの効果が2倍"},
-  {id:"w4", name:"外交官としてウガンダに駐在する家庭", region:"ウガンダ（駐在）", rural:false, money:150, allow:10, wage:20,
+   daily:{ja:"約400円",en:"about ¥400"}, dailyNote:{ja:"学費を払う月は、ここからさらに減る",en:"school-fee months leave even less"},
+   asa:{ja:"5時起き。水くみに1時間、畑を手伝ってから、5km歩いて学校へ。",en:"Up at 5. An hour fetching water, helping in the field, then a 5 km walk to school."},
+   story:{ja:"学費を払う月はたいへんだ。でも困ったときは、村のみんなが助けてくれる。",
+          en:"School-fee months are hard. But when trouble comes, the whole village helps out."},
+   perkText:{ja:"支え合い：情報が手に入るできごとの効果が2倍",
+             en:"Community: information events count double"}},
+  {id:"w4", name:{ja:"外交官としてウガンダに駐在する家庭",en:"A diplomat family posted to Uganda"}, region:{ja:"ウガンダ（駐在）",en:"Uganda (expat)"}, rural:false, money:150, allow:10, wage:20,
    hide:["chiiki"], perk:"kokusai",
-   daily:"約8,000円", dailyNote:"ただし、門の外の暮らしはちがう",
-   asa:"運転手つきの車で外国人学校へ。窓の外には、歩いて登校する子どもたち。",
-   story:"インターナショナルスクールに通い、長期休みには帰国する。車の窓から見える市場の暮らしを、じつはまだ、よく知らない。",
-   perkText:"国際感覚：はじめから まなび+1／海外・留学系トビラのおかねのカギ −50万"},
-  {id:"w5", name:"支援と出会えた、ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
+   daily:{ja:"約8,000円",en:"about ¥8,000"}, dailyNote:{ja:"ただし、門の外の暮らしはちがう",en:"though life outside the gate is different"},
+   asa:{ja:"運転手つきの車で外国人学校へ。窓の外には、歩いて登校する子どもたち。",en:"A chauffeured car to international school. Outside the window, kids walking to school."},
+   story:{ja:"インターナショナルスクールに通い、長期休みには帰国する。車の窓から見える市場の暮らしを、じつはまだ、よく知らない。",
+          en:"You go to an international school and fly home for the holidays. The market life outside the car window — you don't really know it yet."},
+   perkText:{ja:"国際感覚：はじめから まなび+1／海外・留学系トビラのおかねのカギ −50万",
+             en:"Global sense: start with Learn +1 / study-abroad doors cost −¥500k"}},
+  {id:"w5", name:{ja:"支援と出会えた、ウガンダの遺児の家庭",en:"A Ugandan orphan family — already met support"}, region:{ja:"ウガンダ",en:"Uganda"}, rural:true, money:20, allow:0, wage:10,
    hide:["career","global"], perk:"shienPro",
-   daily:"約250円", dailyNote:"世界の貧困ライン・1日約300円を下回る",
-   asa:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",
-   story:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。そのとき出会った遺児支援の団体で、「支えてくれる仕組みと人」を誰よりも早く知った。",
-   perkText:"支援を知っている：奨学金・支援の選択肢がすべて見えている／はじめて使うと まなび+1"},
-  {id:"w6", name:"まだ支援と出会えていない、ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
+   daily:{ja:"約250円",en:"about ¥250"}, dailyNote:{ja:"世界の貧困ライン・1日約300円を下回る",en:"below the global poverty line of about ¥300/day"},
+   asa:{ja:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",en:"Up at 5. Water, your little brother, your mother's field — then a 6 km walk to school."},
+   story:{ja:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。そのとき出会った遺児支援の団体で、「支えてくれる仕組みと人」を誰よりも早く知った。",
+          en:"You lost your father to illness when you were small. You keep up school while helping your mother with the field. The orphan-support group you met taught you, earlier than anyone, that help exists."},
+   perkText:{ja:"支援を知っている：奨学金・支援の選択肢がすべて見えている／はじめて使うと まなび+1",
+             en:"Knows support: all aid/scholarship options are visible / first use gives Learn +1"}},
+  {id:"w6", name:{ja:"まだ支援と出会えていない、ウガンダの遺児の家庭",en:"A Ugandan orphan family — not yet met support"}, region:{ja:"ウガンダ",en:"Uganda"}, rural:true, money:20, allow:0, wage:10,
    hide:["shien","career","global"], perk:"deai",
-   daily:"約250円", dailyNote:"世界の貧困ライン・1日約300円を下回る",
-   asa:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",
-   story:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。支えてくれる仕組みが世界にあることを、まだ誰も教えてくれていない。",
-   perkText:"出会いがチカラになる：「支援」の選択肢がはじめて見えたとき、まなび+1＆支援・まなび系のカギが −50万 になる"},
+   daily:{ja:"約250円",en:"about ¥250"}, dailyNote:{ja:"世界の貧困ライン・1日約300円を下回る",en:"below the global poverty line of about ¥300/day"},
+   asa:{ja:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",en:"Up at 5. Water, your little brother, your mother's field — then a 6 km walk to school."},
+   story:{ja:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。支えてくれる仕組みが世界にあることを、まだ誰も教えてくれていない。",
+          en:"You lost your father to illness when you were small. You keep up school while helping your mother with the field. Nobody has told you yet that, somewhere in the world, there is help."},
+   perkText:{ja:"出会いがチカラになる：「支援」の選択肢がはじめて見えたとき、まなび+1＆支援・まなび系のカギが −50万 になる",
+             en:"A meeting becomes power: when \"aid\" options first become visible — Learn +1 & aid/learning keys cost −¥500k"}},
 ];
 
 /* 各マスの年齢（6歳→35歳の29年間） */
@@ -440,163 +457,163 @@ const AGES = [
 ];
 /* 盤面の行＝人生の章 */
 const CHAPTERS = [
-  {t:"🌱 子ども時代 ── 6〜16歳", note:"15歳までは1マスずつ。人生の土台の時間だ"},
-  {t:"🏫 10代後半 ── 道がわかれはじめる"},
-  {t:"💼 20代前半 ── 道を選ぶ"},
-  {t:"🚀 20代なかば ── 広がる世界"},
-  {t:"📚 30歳前後 ── 学びなおしと挑戦"},
-  {t:"🌅 30代なかば ── 積み重ねの先に"},
+  {t:{ja:"🌱 子ども時代 ── 6〜16歳",en:"🌱 Childhood — age 6–16"}, note:{ja:"15歳までは1マスずつ。人生の土台の時間だ",en:"One square at a time until 15 — the years that build your base"}},
+  {t:{ja:"🏫 10代後半 ── 道がわかれはじめる",en:"🏫 Late teens — paths start to split"}},
+  {t:{ja:"💼 20代前半 ── 道を選ぶ",en:"💼 Early 20s — choosing a road"}},
+  {t:{ja:"🚀 20代なかば ── 広がる世界",en:"🚀 Mid 20s — a wider world"}},
+  {t:{ja:"📚 30歳前後 ── 学びなおしと挑戦",en:"📚 Around 30 — relearning & challenges"}},
+  {t:{ja:"🌅 30代なかば ── 積み重ねの先に",en:"🌅 Mid 30s — where it all adds up"}},
 ];
 
 /* 盤面 36マス */
 const SQUARES = [
-  {t:"start", name:"スタート"},
-  {t:"income", name:"はじめてのお手伝い", fixed:15, stop:true},
+  {t:"start", name:{ja:"スタート",en:"Start"}},
+  {t:"income", name:{ja:"はじめてのお手伝い",en:"First chores"}, fixed:15, stop:true},
   {t:"event", stop:true},
   {t:"learn", stop:true},
-  {t:"choice", name:"進学", key:"shinro", stop:true},
-  {t:"income", name:"おしごと"},
+  {t:"choice", name:{ja:"進学",en:"School"}, key:"shinro", stop:true},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
   {t:"event"},
-  {t:"cost", name:"学用品・制服代", amt:20},
+  {t:"cost", name:{ja:"学用品・制服代",en:"School supplies & uniform"}, amt:20},
   {t:"learn"},
-  {t:"choice", name:"くらし", key:"kurashi"},
-  {t:"income", name:"おしごと"},
-  {t:"choice", name:"まち", key:"machi"},
-  {t:"cost", name:"急な病気の医療費", amt:30},
-  {t:"choice", name:"技術", key:"ginou"},
-  {t:"income", name:"おしごと"},
+  {t:"choice", name:{ja:"くらし",en:"Home life"}, key:"kurashi"},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
+  {t:"choice", name:{ja:"まち",en:"Town"}, key:"machi"},
+  {t:"cost", name:{ja:"急な病気の医療費",en:"Sudden medical bill"}, amt:30},
+  {t:"choice", name:{ja:"技術",en:"Skills"}, key:"ginou"},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
   {t:"learn"},
   {t:"event"},
-  {t:"choice", name:"しごと", key:"shigoto"},
-  {t:"income", name:"おしごと"},
-  {t:"cost", name:"家族のための出費", amt:40},
+  {t:"choice", name:{ja:"しごと",en:"Career"}, key:"shigoto"},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
+  {t:"cost", name:{ja:"家族のための出費",en:"Family expenses"}, amt:40},
   {t:"event"},
-  {t:"choice", name:"留学", key:"kaigai"},
+  {t:"choice", name:{ja:"留学",en:"Abroad"}, key:"kaigai"},
   {t:"learn"},
-  {t:"income", name:"おしごと"},
-  {t:"choice", name:"学びなおし", key:"manabinaoshi"},
-  {t:"choice", name:"挑戦", key:"chousen"},
-  {t:"cost", name:"ライフイベント出費", amt:50},
-  {t:"income", name:"おしごと"},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
+  {t:"choice", name:{ja:"学びなおし",en:"Relearn"}, key:"manabinaoshi"},
+  {t:"choice", name:{ja:"挑戦",en:"Challenge"}, key:"chousen"},
+  {t:"cost", name:{ja:"ライフイベント出費",en:"Life event costs"}, amt:50},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
   {t:"event"},
-  {t:"choice", name:"大きな夢", key:"yume"},
+  {t:"choice", name:{ja:"大きな夢",en:"Big dream"}, key:"yume"},
   {t:"learn"},
-  {t:"income", name:"おしごと"},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
   {t:"event"},
-  {t:"cost", name:"まとまった出費", amt:60},
-  {t:"income", name:"おしごと"},
-  {t:"goal", name:"ゴール"},
+  {t:"cost", name:{ja:"まとまった出費",en:"Big expense"}, amt:60},
+  {t:"income", name:{ja:"おしごと",en:"Work"}},
+  {t:"goal", name:{ja:"ゴール",en:"Goal"}},
 ];
 
 /* トビラ定義 tag: shien/chiiki/career/global は家庭カードによって？？？になる */
 function choiceDef(key, p){
   switch(key){
     case "shinro": return {
-      title:"進学のトビラ", body:"学校を卒業。ここから先の道を選ぼう。",
+      title:{ja:"進学のトビラ",en:"The School Door"}, body:{ja:"学校を卒業。ここから先の道を選ぼう。",en:"You finished school. Choose your next path."},
       opts:[
-        {t:"上の学校へ進学する（自費）", d:"学費を家のお金で払ってまなぶ。世界がひろがる", req:{money:150}, fx:{money:-150, learn:3, happy:1}},
-        {t:"奨学金・支援団体の力で進学する", d:"はたらきはじめたら、すこしずつ返す。支援を知っていれば、返さなくていい奨学金に出会えることも", tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}, special:"shogakukin"},
-        {t:"働いて家族を支える", d:"畑や店で働き、現場で経験を積む", req:{}, fx:{money:80, learn:1}},
+        {t:{ja:"上の学校へ進学する（自費）",en:"Continue to higher education (self-funded)"}, d:{ja:"学費を家のお金で払ってまなぶ。世界がひろがる",en:"Your family pays the fees. The world opens up"}, req:{money:150}, fx:{money:-150, learn:3, happy:1}},
+        {t:{ja:"奨学金・支援団体の力で進学する",en:"Continue with a scholarship / aid group"}, d:{ja:"はたらきはじめたら、すこしずつ返す。支援を知っていれば、返さなくていい奨学金に出会えることも",en:"You repay bit by bit once you work. If you know the right support, you may find a scholarship you never repay"}, tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}, special:"shogakukin"},
+        {t:{ja:"働いて家族を支える",en:"Work to support your family"}, d:{ja:"畑や店で働き、現場で経験を積む",en:"Field or shop — you learn on the job"}, req:{}, fx:{money:80, learn:1}},
       ]};
     case "kurashi":
       if(p.fam.rural) return {
-        title:"くらしのトビラ", variant:"ウガンダ育ち", body:"毎日の水くみと、暗くなったら終わる勉強。くらしを変える？",
+        title:{ja:"くらしのトビラ",en:"The Home Door"}, variant:{ja:"ウガンダ育ち",en:"raised in Uganda"}, body:{ja:"毎日の水くみと、暗くなったら終わる勉強。くらしを変える？",en:"Fetching water every day; studying ends at sunset. Change how you live?"},
         opts:[
-          {t:"雨水タンクとソーラーランプを入れる", d:"水くみの時間が、勉強の時間に変わる", req:{money:50}, fx:{money:-50, learn:1, happy:2}},
-          {t:"いままでどおりの暮らしを続ける", d:"お金はかからない。そのぶん時間はかかる", req:{}, fx:{money:20}},
+          {t:{ja:"雨水タンクとソーラーランプを入れる",en:"Install a rain tank & solar lamp"}, d:{ja:"水くみの時間が、勉強の時間に変わる",en:"Water-fetching time becomes study time"}, req:{money:50}, fx:{money:-50, learn:1, happy:2}},
+          {t:{ja:"いままでどおりの暮らしを続ける",en:"Keep living as before"}, d:{ja:"お金はかからない。そのぶん時間はかかる",en:"Costs nothing — but takes time"}, req:{}, fx:{money:20}},
         ]};
       return {
-        title:"くらしのトビラ", variant:"欧米・日本育ち", body:"そろそろ自分の暮らしを考えたい。",
+        title:{ja:"くらしのトビラ",en:"The Home Door"}, variant:{ja:"欧米・日本育ち",en:"raised in the West / Japan"}, body:{ja:"そろそろ自分の暮らしを考えたい。",en:"Time to think about a place of your own."},
         opts:[
-          {t:"ひとり暮らしを始める", d:"自由と責任。自分の生活をつくる", req:{money:100}, fx:{money:-100, learn:1, happy:2}},
-          {t:"実家でしっかり貯金", d:"堅実もりっぱな選択", req:{}, fx:{money:50}},
+          {t:{ja:"ひとり暮らしを始める",en:"Start living on your own"}, d:{ja:"自由と責任。自分の生活をつくる",en:"Freedom and responsibility — a life you build"}, req:{money:100}, fx:{money:-100, learn:1, happy:2}},
+          {t:{ja:"実家でしっかり貯金",en:"Stay home and save"}, d:{ja:"堅実もりっぱな選択",en:"Playing it steady is a fine choice"}, req:{}, fx:{money:50}},
         ]};
     case "machi":
       if(p.fam.rural) return {
-        title:"まちのトビラ", variant:"ウガンダ育ち", body:"村を出るか、残るか。人生の分かれ道。",
+        title:{ja:"まちのトビラ",en:"The Town Door"}, variant:{ja:"ウガンダ育ち",en:"raised in Uganda"}, body:{ja:"村を出るか、残るか。人生の分かれ道。",en:"Leave the village, or stay? A fork in life."},
         opts:[
-          {t:"首都カンパラに出る", d:"生活費は上がる。でも、見える世界と、はたらける場が変わる", req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll", unlock:true},
-          {t:"村で暮らしつづける", d:"顔見知りと、慣れた畑。生活費は安い", req:{}, fx:{money:20, happy:1}},
+          {t:{ja:"首都カンパラに出る",en:"Move to Kampala, the capital"}, d:{ja:"生活費は上がる。でも、見える世界と、はたらける場が変わる",en:"Living costs rise — but what you can see, and where you can work, change"}, req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll", unlock:true},
+          {t:{ja:"村で暮らしつづける",en:"Stay in the village"}, d:{ja:"顔見知りと、慣れた畑。生活費は安い",en:"Familiar faces, familiar fields. Cheap to live"}, req:{}, fx:{money:20, happy:1}},
         ]};
       return {
-        title:"まちのトビラ", variant:"欧米・日本育ち", body:"進学・しごと・暮らし。どこで生きていく？",
+        title:{ja:"まちのトビラ",en:"The Town Door"}, variant:{ja:"欧米・日本育ち",en:"raised in the West / Japan"}, body:{ja:"進学・しごと・暮らし。どこで生きていく？",en:"Study, work, life — where will you live?"},
         opts:[
-          {t:"大都市に住みつづける", d:"情報も出会いも多い。そのぶん生活費が高い", req:{}, fx:{money:-30, happy:1}},
-          {t:"家賃の安い郊外へ", d:"浮いたお金は貯金にまわす", req:{}, fx:{money:30}},
+          {t:{ja:"大都市に住みつづける",en:"Stay in the big city"}, d:{ja:"情報も出会いも多い。そのぶん生活費が高い",en:"Full of information and encounters — and high costs"}, req:{}, fx:{money:-30, happy:1}},
+          {t:{ja:"家賃の安い郊外へ",en:"Move somewhere cheaper"}, d:{ja:"浮いたお金は貯金にまわす",en:"Save the difference"}, req:{}, fx:{money:30}},
         ]};
     case "ginou": return {
-      title:"技術のトビラ", body:"手に職があれば、しごとの幅がぐんと広がる。",
+      title:{ja:"技術のトビラ",en:"The Skills Door"}, body:{ja:"手に職があれば、しごとの幅がぐんと広がる。",en:"A trade widens the work you can do."},
       opts:[
-        {t:"職業訓練校で技術を学ぶ", d:"縫製・機械・IT。お金と時間を集中投資", tag:"career", req:{money:50, learn:3}, fx:{money:-50, learn:2, happy:1}, unlock:true},
-        {t:"見習いとして働きながら覚える", d:"先輩の手もとが教科書", req:{}, fx:{money:10, learn:1}},
-        {t:"今はやめておく", d:"タイミングも大事", req:{}, fx:{}},
+        {t:{ja:"職業訓練校で技術を学ぶ",en:"Train at a vocational school"}, d:{ja:"縫製・機械・IT。お金と時間を集中投資",en:"Sewing, machines, IT — invest money and time"}, tag:"career", req:{money:50, learn:3}, fx:{money:-50, learn:2, happy:1}, unlock:true},
+        {t:{ja:"見習いとして働きながら覚える",en:"Learn as an apprentice"}, d:{ja:"先輩の手もとが教科書",en:"Your seniors' hands are the textbook"}, req:{}, fx:{money:10, learn:1}},
+        {t:{ja:"今はやめておく",en:"Not this time"}, d:{ja:"タイミングも大事",en:"Timing matters too"}, req:{}, fx:{}},
       ]};
     case "shigoto": return {
-      title:"しごとのトビラ", body:"新しいしごとの募集を見つけた！",
+      title:{ja:"しごとのトビラ",en:"The Career Door"}, body:{ja:"新しいしごとの募集を見つけた！",en:"You found a new job opening!"},
       opts:[
-        {t:"国際機関・NGOで働く", d:"まなびの蓄積が採用の決め手に", tag:"career", req:{learn:5}, fx:{learn:1, happy:2}, unlock:true},
-        {t:"給料の高いしごとに移る", d:"スキルを高く買ってもらう", req:{learn:4}, fx:{money:100}},
-        {t:"いまのしごとを続ける", d:"安定して働き、少し昇給した", req:{}, fx:{money:30}},
+        {t:{ja:"国際機関・NGOで働く",en:"Work for an international org / NGO"}, d:{ja:"まなびの蓄積が採用の決め手に",en:"Your learning is what gets you hired"}, tag:"career", req:{learn:5}, fx:{learn:1, happy:2}, unlock:true},
+        {t:{ja:"給料の高いしごとに移る",en:"Move to a better-paid job"}, d:{ja:"スキルを高く買ってもらう",en:"Sell your skills higher"}, req:{learn:4}, fx:{money:100}},
+        {t:{ja:"いまのしごとを続ける",en:"Keep your current job"}, d:{ja:"安定して働き、少し昇給した",en:"Steady work, a small raise"}, req:{}, fx:{money:30}},
       ]};
     case "kaigai": return {
-      title:"留学のトビラ", body:"海の向こうで学んでみたい気持ちがふくらむ。",
+      title:{ja:"留学のトビラ",en:"The Study-Abroad Door"}, body:{ja:"海の向こうで学んでみたい気持ちがふくらむ。",en:"You want to learn across the sea."},
       opts:[
-        {t:"海外の大学に留学する", d:"言葉の壁をこえた先に、新しい世界", tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}, unlock:true},
-        {t:"外国で働いてみる", d:"仕送りで、遠くの家族も支えられる", req:{learn:3}, fx:{money:80, happy:1}, unlock:true},
-        {t:"自分の国で暮らしつづける", d:"ここにも、いい暮らしはある", req:{}, fx:{happy:1}},
+        {t:{ja:"海外の大学に留学する",en:"Study at a university abroad"}, d:{ja:"言葉の壁をこえた先に、新しい世界",en:"Beyond the language barrier, a new world"}, tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}, unlock:true},
+        {t:{ja:"外国で働いてみる",en:"Work in another country"}, d:{ja:"仕送りで、遠くの家族も支えられる",en:"Send money home to your family"}, req:{learn:3}, fx:{money:80, happy:1}, unlock:true},
+        {t:{ja:"自分の国で暮らしつづける",en:"Stay in your own country"}, d:{ja:"ここにも、いい暮らしはある",en:"There is a good life here too"}, req:{}, fx:{happy:1}},
       ]};
     case "manabinaoshi": return {
-      title:"学びなおしのトビラ", body:"大人になってからでも、学びの扉は開けなおせる。",
+      title:{ja:"学びなおしのトビラ",en:"The Relearning Door"}, body:{ja:"大人になってからでも、学びの扉は開けなおせる。",en:"Even as an adult, the door to learning can reopen."},
       opts:[
-        {t:"夜間学校・オンライン講座で学びなおす", d:"一度閉じた扉も、もう一度開けられる", tag:"shien", req:{money:80, learn:2}, fx:{money:-80, learn:3, happy:1}},
-        {t:"今の道をきわめる", d:"続ける力も立派なキャリア", req:{}, fx:{money:20}},
+        {t:{ja:"夜間学校・オンライン講座で学びなおす",en:"Night school / online courses"}, d:{ja:"一度閉じた扉も、もう一度開けられる",en:"A door that closed once can open again"}, tag:"shien", req:{money:80, learn:2}, fx:{money:-80, learn:3, happy:1}},
+        {t:{ja:"今の道をきわめる",en:"Master your current path"}, d:{ja:"続ける力も立派なキャリア",en:"Persistence is a career too"}, req:{}, fx:{money:20}},
       ]};
     case "chousen": return {
-      title:"挑戦のトビラ", body:"やってみたいことがある。動くなら今かも。",
+      title:{ja:"挑戦のトビラ",en:"The Challenge Door"}, body:{ja:"やってみたいことがある。動くなら今かも。",en:"There's something you want to try. Now may be the time."},
       opts:[
-        {t:"起業する", d:"たくわえとまなびを全部つぎこんで勝負", req:{money:250, learn:6}, fx:{money:-250, learn:2, happy:3}},
-        {t:"地域の子どもたちに勉強を教える", d:"もらった支えを、次の世代へ手わたす", tag:"chiiki", req:{learn:3}, fx:{learn:1, happy:2}},
-        {t:"今の道をきわめる", d:"続けることも立派な挑戦", req:{}, fx:{money:20}},
+        {t:{ja:"起業する",en:"Start a business"}, d:{ja:"たくわえとまなびを全部つぎこんで勝負",en:"Bet your savings and your learning"}, req:{money:250, learn:6}, fx:{money:-250, learn:2, happy:3}},
+        {t:{ja:"地域の子どもたちに勉強を教える",en:"Teach local kids"}, d:{ja:"もらった支えを、次の世代へ手わたす",en:"Pass the support you received to the next generation"}, tag:"chiiki", req:{learn:3}, fx:{learn:1, happy:2}},
+        {t:{ja:"今の道をきわめる",en:"Master your current path"}, d:{ja:"続けることも立派な挑戦",en:"Continuing is a challenge too"}, req:{}, fx:{money:20}},
       ]};
     case "yume": return {
-      title:"大きな夢のトビラ", body:"人生でいちばんやりたかったこと、覚えてる？",
+      title:{ja:"大きな夢のトビラ",en:"The Big Dream Door"}, body:{ja:"人生でいちばんやりたかったこと、覚えてる？",en:"Remember the thing you most wanted to do?"},
       opts:[
-        {t:"世界一周の旅に出る", d:"ずっと夢だったあの計画を実行", req:{money:200}, fx:{money:-200, happy:4}},
-        {t:"故郷に図書館をつくる仲間に加わる", d:"じぶんの夢が、みんなの夢になる", tag:"chiiki", req:{money:50, learn:4}, fx:{money:-50, happy:4}},
-        {t:"大切な人との時間に投資", d:"いちばん近くにある、しあわせ", req:{money:100}, fx:{money:-100, happy:3}},
-        {t:"星空の下で、家族と夢を語り合う", d:"お金はなくても、夢は語れる", req:{}, fx:{happy:1}},
+        {t:{ja:"世界一周の旅に出る",en:"Travel around the world"}, d:{ja:"ずっと夢だったあの計画を実行",en:"The plan you always dreamed of"}, req:{money:200}, fx:{money:-200, happy:4}},
+        {t:{ja:"故郷に図書館をつくる仲間に加わる",en:"Help build a library back home"}, d:{ja:"じぶんの夢が、みんなの夢になる",en:"Your dream becomes everyone's dream"}, tag:"chiiki", req:{money:50, learn:4}, fx:{money:-50, happy:4}},
+        {t:{ja:"大切な人との時間に投資",en:"Invest in time with loved ones"}, d:{ja:"いちばん近くにある、しあわせ",en:"The happiness closest to you"}, req:{money:100}, fx:{money:-100, happy:3}},
+        {t:{ja:"星空の下で、家族と夢を語り合う",en:"Talk about dreams under the stars"}, d:{ja:"お金はなくても、夢は語れる",en:"Dreams cost nothing to share"}, req:{}, fx:{happy:1}},
       ]};
     case "learnSq": return {
-      title:"まなびのトビラ", body:"自分に投資するチャンス。どうする？",
+      title:{ja:"まなびのトビラ",en:"The Learning Door"}, body:{ja:"自分に投資するチャンス。どうする？",en:"A chance to invest in yourself."},
       opts:[
-        {t:"学校や講座にお金を払って学ぶ", d:"お金をかけたぶん、ぐんと伸びる", tag:"manabi", req:{money:30}, fx:{money:-30, learn:2}},
-        {t:"ラジオ・本・友だちから学ぶ", d:"ゼロ円でもちゃんと前に進める", req:{}, fx:{learn: p.perk==="kinben" ? 2 : 1}},
+        {t:{ja:"学校や講座にお金を払って学ぶ",en:"Pay for school or a course"}, d:{ja:"お金をかけたぶん、ぐんと伸びる",en:"Money in, big growth out"}, tag:"manabi", req:{money:30}, fx:{money:-30, learn:2}},
+        {t:{ja:"ラジオ・本・友だちから学ぶ",en:"Learn from radio, books, friends"}, d:{ja:"ゼロ円でもちゃんと前に進める",en:"Zero yen still moves you forward"}, req:{}, fx:{learn: p.perk==="kinben" ? 2 : 1}},
       ]};
   }
 }
 
 /* できごとカード only: rural=ウガンダの村ぐらし / rich=先進国・駐在ぐらし */
 const EVENTS = [
-  {t:"手伝いが評価されて臨時収入", d:"はたらく力は、どこの国でも役に立つ", fx:{money:30}},
-  {t:"中古のスマホを手に入れた", d:"世界とつながる小さな窓ができた", fx:{learn:1, happy:1}},
-  {t:"遠くの親戚が送金してくれた", d:"家族の助け合いは、国境をこえる", fx:{money:30}},
-  {t:"「外国でかんたんに稼げる」という話を断った", d:"うますぎる話にはウラがある。えらい！", fx:{learn:1}},
-  {t:"熱を出して寝こんだ", d:"薬代と、休んだぶんの出費", fx:{money:-10}},
-  {only:"rural", t:"市場の手伝いで小づかいをかせいだ", d:"商売のコツが、少し身についた", fx:{money:20}},
-  {only:"rural", t:"雨季の大雨で、通学路が川になった", d:"学校まで歩けない日もある", fx:{money:-10}},
-  {only:"rural", t:"ラジオの教育番組に夢中になった", d:"電気が少なくても、学びは届く", fx:{learn:1}},
-  {only:"rural", t:"マラリアにかかってしまった", d:"薬代と、休んだあいだの出費", fx:{money:-20}},
-  {only:"rural", t:"村の収穫祭でごちそうを囲んだ", d:"分け合うと、しあわせはふえる", fx:{money:-10, happy:2}},
-  {only:"rural", t:"作物が高く売れた", d:"がんばった畑が実を結んだ", fx:{money:30}},
-  {only:"rural", t:"毎日歩く通学路で、靴がこわれた", d:"長い道のりは、モノも消耗させる", fx:{money:-10}},
-  {only:"rural", t:"教科書を友だちと貸し借りした", d:"1冊の本も、分ければ2人分", fx:{learn:1, happy:1}},
-  {only:"rich", t:"習いごとの発表会があった", d:"月謝は高いけど、いい経験になった", fx:{money:-15, happy:2}},
-  {only:"rich", t:"家族で旅行に出かけた", d:"楽しかったけど、けっこうな出費", fx:{money:-25, happy:2}},
-  {only:"rich", t:"サブスク、入りすぎでは？", d:"固定費の見直しは節約の第一歩", fx:{money:-15}},
-  {kind:"info", reveal:"any", t:"外国から来た人と、じっくり話しこんだ", d:"知らなかった世界の入口が、少し見えた"},
-  {kind:"info", reveal:"shien", t:"「返さなくていい奨学金で大学に行けた」という話を聞いた", d:"世界には、そういう仕組みをつくっている人たちがいる"},
-  {kind:"info", reveal:"chiiki", t:"近所の家の夕食に招かれた", d:"「困ったときはお互いさま」。そういう世界が、すぐそばにあった"},
-  {kind:"fair", t:"NGOの進学説明会が、となりの町まで来た", d:"バス代はかかるけど、行けば情報が手に入る"},
+  {t:{ja:"手伝いが評価されて臨時収入",en:"Extra pay for good work"}, d:{ja:"はたらく力は、どこの国でも役に立つ",en:"Hard work pays off in any country"}, fx:{money:30}},
+  {t:{ja:"中古のスマホを手に入れた",en:"You got a second-hand smartphone"}, d:{ja:"世界とつながる小さな窓ができた",en:"A little window to the world"}, fx:{learn:1, happy:1}},
+  {t:{ja:"遠くの親戚が送金してくれた",en:"A distant relative sent money"}, d:{ja:"家族の助け合いは、国境をこえる",en:"Family help crosses borders"}, fx:{money:30}},
+  {t:{ja:"「外国でかんたんに稼げる」という話を断った",en:"You turned down an \"easy money abroad\" offer"}, d:{ja:"うますぎる話にはウラがある。えらい！",en:"Deals too good to be true always are. Well done!"}, fx:{learn:1}},
+  {t:{ja:"熱を出して寝こんだ",en:"You caught a fever"}, d:{ja:"薬代と、休んだぶんの出費",en:"Medicine, plus the days you missed"}, fx:{money:-10}},
+  {only:"rural", t:{ja:"市場の手伝いで小づかいをかせいだ",en:"Earned pocket money at the market"}, d:{ja:"商売のコツが、少し身についた",en:"You picked up a knack for trade"}, fx:{money:20}},
+  {only:"rural", t:{ja:"雨季の大雨で、通学路が川になった",en:"Heavy rains turned the road into a river"}, d:{ja:"学校まで歩けない日もある",en:"Some days you just can't reach school"}, fx:{money:-10}},
+  {only:"rural", t:{ja:"ラジオの教育番組に夢中になった",en:"Hooked on a radio study program"}, d:{ja:"電気が少なくても、学びは届く",en:"Learning arrives even with little electricity"}, fx:{learn:1}},
+  {only:"rural", t:{ja:"マラリアにかかってしまった",en:"You caught malaria"}, d:{ja:"薬代と、休んだあいだの出費",en:"Medicine, plus the days you missed"}, fx:{money:-20}},
+  {only:"rural", t:{ja:"村の収穫祭でごちそうを囲んだ",en:"Harvest festival feast in the village"}, d:{ja:"分け合うと、しあわせはふえる",en:"Sharing multiplies happiness"}, fx:{money:-10, happy:2}},
+  {only:"rural", t:{ja:"作物が高く売れた",en:"Your crops sold high"}, d:{ja:"がんばった畑が実を結んだ",en:"The field rewarded your work"}, fx:{money:30}},
+  {only:"rural", t:{ja:"毎日歩く通学路で、靴がこわれた",en:"Your shoes wore out on the long walk"}, d:{ja:"長い道のりは、モノも消耗させる",en:"A long road wears things down"}, fx:{money:-10}},
+  {only:"rural", t:{ja:"教科書を友だちと貸し借りした",en:"Shared textbooks with a friend"}, d:{ja:"1冊の本も、分ければ2人分",en:"One book, split two ways"}, fx:{learn:1, happy:1}},
+  {only:"rich", t:{ja:"習いごとの発表会があった",en:"Recital day for your lessons"}, d:{ja:"月謝は高いけど、いい経験になった",en:"Pricey lessons, good experience"}, fx:{money:-15, happy:2}},
+  {only:"rich", t:{ja:"家族で旅行に出かけた",en:"A family trip"}, d:{ja:"楽しかったけど、けっこうな出費",en:"Fun — and expensive"}, fx:{money:-25, happy:2}},
+  {only:"rich", t:{ja:"サブスク、入りすぎでは？",en:"Too many subscriptions?"}, d:{ja:"固定費の見直しは節約の第一歩",en:"Reviewing fixed costs is step one of saving"}, fx:{money:-15}},
+  {kind:"info", reveal:"any", t:{ja:"外国から来た人と、じっくり話しこんだ",en:"A long talk with a visitor from abroad"}, d:{ja:"知らなかった世界の入口が、少し見えた",en:"A door to a world you didn't know cracked open"}},
+  {kind:"info", reveal:"shien", t:{ja:"「返さなくていい奨学金で大学に行けた」という話を聞いた",en:"You heard of a scholarship you never repay"}, d:{ja:"世界には、そういう仕組みをつくっている人たちがいる",en:"Somewhere, people are building systems like that"}},
+  {kind:"info", reveal:"chiiki", t:{ja:"近所の家の夕食に招かれた",en:"Invited to dinner next door"}, d:{ja:"「困ったときはお互いさま」。そういう世界が、すぐそばにあった",en:"\"We help each other here.\" That world was right beside you"}},
+  {kind:"fair", t:{ja:"NGOの進学説明会が、となりの町まで来た",en:"An NGO study fair came to the next town"}, d:{ja:"バス代はかかるけど、行けば情報が手に入る",en:"Bus fare costs — but information awaits"}},
 ];
 
 /* ===================== state ===================== */
@@ -605,6 +622,15 @@ let turn = 0;
 let deck = [];
 let busy = false;
 let heavyOn = false;
+let lang = "ja";
+
+/* ---------- i18n ---------- */
+/* L: {ja,en}オブジェクトなら現在言語の文字列を返す。文字列はそのまま */
+const L = v => (v && typeof v === "object" && v.ja !== undefined) ? v[lang] : v;
+/* fm: おかね表記 150 → 「150万」/「¥1,500k」 */
+const fm = n => lang === "ja" ? `${n}万` : `${n<0?"-":""}¥${(Math.abs(n)*10).toLocaleString("en-US")}k`;
+/* fage: 年齢表記 */
+const fage = n => lang === "ja" ? `${n}歳` : `Age ${n}`;
 
 const $ = (id)=>document.getElementById(id);
 const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
@@ -621,8 +647,8 @@ function makeInputRow(i, name){
   const row = document.createElement("div");
   row.className = "p-row";
   row.innerHTML = `<span class="p-dot" style="background:${PCOLORS[i]}"></span>
-    <input maxlength="8" placeholder="プレイヤー${i+1}" value="${name||""}">
-    <button class="rm" aria-label="削除">✕</button>`;
+    <input maxlength="12" placeholder="${lang==="ja"?"プレイヤー":"Player "}${i+1}" value="${name||""}">
+    <button class="rm" aria-label="remove">✕</button>`;
   row.querySelector(".rm").onclick = ()=>{
     if($("playerInputs").children.length > 2){ row.remove(); refreshDots(); }
   };
@@ -631,9 +657,42 @@ function makeInputRow(i, name){
 function refreshDots(){
   [...$("playerInputs").children].forEach((r,i)=>{
     r.querySelector(".p-dot").style.background = PCOLORS[i];
-    r.querySelector("input").placeholder = `プレイヤー${i+1}`;
+    r.querySelector("input").placeholder = `${lang==="ja"?"プレイヤー":"Player "}${i+1}`;
   });
 }
+
+/* ---------- 言語切り替え（セットアップ画面） ---------- */
+function applyLang(){
+  const ja = lang === "ja";
+  document.documentElement.lang = ja ? "ja" : "en";
+  document.title = ja ? "トビラ せかい版 — 世界の遺児と、おかねと選択肢の人生すごろく"
+                      : "TOBIRA World — a life board game of money and choices";
+  $("langJa").classList.toggle("on", ja);
+  $("langEn").classList.toggle("on", !ja);
+  $("gameSub").innerHTML = ja
+    ? "🌍 せかい版 ─ 世界のどこかで6歳から35歳を生きる、おかねと選択肢の人生すごろく（2〜6人・約25分）"
+    : "🌍 World Edition ─ live from age 6 to 35, somewhere in the world. A board game of money and choices (2–6 players · ~25 min)";
+  $("addPlayer").textContent = ja ? "＋ プレイヤーを追加" : "＋ Add player";
+  $("helpBtnSetup").textContent = ja ? "❓ あそびかた" : "❓ How to play";
+  $("heavyLabel").innerHTML = ja
+    ? "⚠️ 死別・干ばつなどのライフイベントを含める<br><small>ファシリテーター向け設定。参加者の状況にあわせてONにしてください。</small>"
+    : "⚠️ Include loss & disaster life events<br><small>For facilitators. Turn on when it suits your group.</small>";
+  $("startBtn").textContent = ja ? "スタート！" : "START!";
+  $("setupNote").innerHTML = ja
+    ? "はじめに、それぞれが<b>「家庭カード」</b>をこっそり引きます。<br>生まれる国と家庭は、自分では選べない。<br>1台の画面を囲んで、順番にサイコロを回して遊ぼう。"
+    : "First, each player secretly draws a <b>Family Card</b>.<br>You don't get to choose where you're born.<br>Gather around one screen and take turns.";
+  $("logoTxt").textContent = ja ? "🌍 トビラ せかい版" : "🌍 TOBIRA World";
+  $("resTitle").textContent = ja ? "🎉 けっか はっぴょう" : "🎉 Results";
+  $("resSub").textContent = ja
+    ? "6歳から35歳、29年間のけっか。順位は「ハッピー」の数で決まります — そして、家庭カードの公開"
+    : "29 years, from age 6 to 35. Ranking is decided by ♥ Happiness — and the Family Cards are revealed";
+  $("allDoorsBtn").textContent = ja ? "🚪 29年間のトビラ一覧を見る" : "🚪 See all doors of the 29 years";
+  $("againBtn").textContent = ja ? "もういちど遊ぶ" : "Play again";
+  $("diceLabel").textContent = ja ? "サイコロを回す" : "Roll the dice";
+  refreshDots();
+}
+$("langJa").onclick = ()=>{ lang = "ja"; applyLang(); };
+$("langEn").onclick = ()=>{ lang = "en"; applyLang(); };
 function initSetup(){
   const box = $("playerInputs");
   box.innerHTML = "";
@@ -655,7 +714,7 @@ $("startBtn").onclick = ()=>{
     [famDeck[ti], famDeck[oi]] = [famDeck[oi], famDeck[ti]];
   }
   players = rows.map((r,i)=>{
-    const nm = r.querySelector("input").value.trim() || `プレイヤー${i+1}`;
+    const nm = r.querySelector("input").value.trim() || `${lang==="ja"?"プレイヤー":"Player "}${i+1}`;
     const fam = famDeck[i % famDeck.length];
     return {
       name:nm, color:PCOLORS[i], fam,
@@ -686,30 +745,34 @@ function showScreen(id){
 function revealFamilyCard(i){
   if(i >= players.length){ closeModal(); beginTurn(); return; }
   const p = players[i];
+  const ja = lang === "ja";
   openModal(`
-    <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 家庭カード</span>
-    <h2>${p.name} さんだけ、見てください</h2>
-    <p class="m-body">ほかの人には見せずに、そっとめくってね。<br>あなたのスタート地点が書いてあります。</p>
-    <button class="m-btn" id="mFlip">カードをめくる</button>`);
+    <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 ${L(TYPE_META.fam.label)}</span>
+    <h2>${ja ? p.name+" さんだけ、見てください" : "For "+p.name+"'s eyes only"}</h2>
+    <p class="m-body">${ja ? "ほかの人には見せずに、そっとめくってね。<br>あなたのスタート地点が書いてあります。"
+      : "Flip it quietly — don't show the others.<br>Your starting point is written inside."}</p>
+    <button class="m-btn" id="mFlip">${ja ? "カードをめくる" : "Flip the card"}</button>`);
   $("mFlip").onclick = ()=>{
     const hiddenN = p.hidden.size;
     openModal(`
-      <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 ${p.name} さんの家庭カード</span>
+      <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 ${ja ? p.name+" さんの家庭カード" : p.name+"'s Family Card"}</span>
       <div class="fam-card">
-        <div class="f-name">${p.fam.name}</div>
-        <div class="f-story">${p.fam.story}</div>
-        <div class="f-story" style="opacity:.85">🌅 <b>あなたの朝</b>：${p.fam.asa}</div>
+        <div class="f-name">${L(p.fam.name)}</div>
+        <div class="f-story">${L(p.fam.story)}</div>
+        <div class="f-story" style="opacity:.85">🌅 <b>${ja ? "あなたの朝" : "Your morning"}</b>：${L(p.fam.asa)}</div>
         <div class="f-stats">
-          <span>💰 はじめのおかね：<b>${p.money}万</b></span>
-          <span>🍚 1日の生活費：<b>${p.fam.daily}</b>${p.fam.dailyNote ? "（"+p.fam.dailyNote+"）" : ""}</span>
-          <span>💼 おしごとの基本給：<b>${p.fam.wage}万</b>（＋まなび×<b>${p.fam.rural?5:10}万</b>）</span>
-          <span>📮 仕送り：<b>${p.allow>0 ? "毎回のかせぎ +"+p.allow+"万" : "なし"}</b></span>
-          <span>🌍 生まれた場所：<b>${p.region}</b></span>
-          <span>👁 まだ見えていない選択肢：<b>${hiddenN}個</b>${hiddenN>0?"（そのマスでは「？？？」と表示されます）":""}</span>
-          <span>✨ とくい：<b>${p.fam.perkText}</b></span>
+          <span>💰 ${ja ? "はじめのおかね" : "Starting money"}：<b>${fm(p.money)}</b></span>
+          <span>🍚 ${ja ? "1日の生活費" : "Daily living cost"}：<b>${L(p.fam.daily)}</b>${p.fam.dailyNote ? "（"+L(p.fam.dailyNote)+"）" : ""}</span>
+          <span>💼 ${ja ? "おしごとの基本給" : "Base pay"}：<b>${fm(p.fam.wage)}</b>（${ja ? "＋まなび×" : "＋Learn×"}<b>${fm(p.fam.rural?5:10)}</b>）</span>
+          <span>📮 ${ja ? "仕送り" : "Allowance"}：<b>${p.allow>0 ? (ja ? "毎回のかせぎ +"+fm(p.allow) : "+"+fm(p.allow)+" per payday") : (ja ? "なし" : "none")}</b></span>
+          <span>🌍 ${ja ? "生まれた場所" : "Born in"}：<b>${L(p.fam.region)}</b></span>
+          <span>👁 ${ja ? "まだ見えていない選択肢" : "Options you can't see yet"}：<b>${hiddenN}</b>${hiddenN>0 ? (ja ? "個（そのマスでは「？？？」と表示されます）" : " (shown as ？？？ on those squares)") : ""}</span>
+          <span>✨ ${ja ? "とくい" : "Strength"}：<b>${L(p.fam.perkText)}</b></span>
         </div>
       </div>
-      <button class="m-btn" id="mNext">OK、覚えた${i < players.length-1 ? "（次の人へ）" : "（ゲームスタート！）"}</button>`);
+      <button class="m-btn" id="mNext">${ja
+        ? "OK、覚えた" + (i < players.length-1 ? "（次の人へ）" : "（ゲームスタート！）")
+        : "Got it" + (i < players.length-1 ? " (next player)" : " (start the game!)")}</button>`);
     $("mNext").onclick = ()=>revealFamilyCard(i+1);
   };
 }
@@ -728,7 +791,7 @@ function renderBoard(){
     lab.className = "chapter";
     lab.style.gridRow = r*2+1;
     lab.style.gridColumn = "1 / -1";
-    lab.innerHTML = c.t + (c.note ? `<span class="ch-note">${c.note}</span>` : "");
+    lab.innerHTML = L(c.t) + (c.note ? `<span class="ch-note">${L(c.note)}</span>` : "");
     b.appendChild(lab);
   });
   SQUARES.forEach((sq,i)=>{
@@ -738,8 +801,8 @@ function renderBoard(){
     el.id = `sq-${i}`;
     const {row,col} = gridPos(i);
     el.style.gridRow = row*2+2; el.style.gridColumn = col+1;
-    const ageLabel = (sq.t === "choice" || sq.t === "start" || sq.t === "goal") ? `<span class="num">${AGES[i]}歳</span>` : "";
-    el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${sq.name || m.label}</span><div class="tokens"></div>`;
+    const ageLabel = (sq.t === "choice" || sq.t === "start" || sq.t === "goal") ? `<span class="num">${lang==="ja" ? AGES[i]+"歳" : AGES[i]}</span>` : "";
+    el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${L(sq.name) || L(m.label)}</span><div class="tokens"></div>`;
     b.appendChild(el);
   });
 }
@@ -765,16 +828,16 @@ function renderStrip(){
     c.className = "pcard" + (i===turn?" now":"") + (p.done?" done":"");
     c.id = `pcard-${i}`;
     c.innerHTML = `
-      <div class="nm"><span class="p-dot" style="background:${p.color}"></span>${p.name}${p.done?" 🏁":""}<span class="age">${AGES[p.pos]}歳</span></div>
-      <div class="stat"><span>おかね</span><b class="${p.money<0?"neg":""}">${p.money}万</b></div>
-      <div class="stat"><span>まなび</span><b>${"★".repeat(Math.min(p.learn,8))}${p.learn>8?"+":""}</b></div>
-      <div class="stat"><span>ハッピー</span><b>♥${p.happy}</b></div>`;
+      <div class="nm"><span class="p-dot" style="background:${p.color}"></span>${p.name}${p.done?" 🏁":""}<span class="age">${fage(AGES[p.pos])}</span></div>
+      <div class="stat"><span>${lang==="ja"?"おかね":"Money"}</span><b class="${p.money<0?"neg":""}">${fm(p.money)}</b></div>
+      <div class="stat"><span>${lang==="ja"?"まなび":"Learn"}</span><b>${"★".repeat(Math.min(p.learn,8))}${p.learn>8?"+":""}</b></div>
+      <div class="stat"><span>${lang==="ja"?"ハッピー":"Happy"}</span><b>♥${p.happy}</b></div>`;
     s.appendChild(c);
   });
 }
 function updateTurnUI(){
   const p = players[turn];
-  $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${p.name} さんの番・${AGES[p.pos]}歳`;
+  $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${lang==="ja" ? `${p.name} さんの番・${AGES[p.pos]}歳` : `${p.name}'s turn · Age ${AGES[p.pos]}`}`;
   renderStrip(); renderTokens();
   const card = $(`pcard-${turn}`);
   if(card) card.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
@@ -799,7 +862,7 @@ function beginTurn(){
   /* 子ども時代(進学の手前まで)はサイコロを使わず1マスずつ */
   const hs = p.pos < 4;
   $("diceFace").style.display = hs ? "none" : "grid";
-  $("diceLabel").textContent = hs ? "🧒 一歩すすむ" : "サイコロを回す";
+  $("diceLabel").textContent = hs ? (lang==="ja" ? "🧒 一歩すすむ" : "🧒 Step forward") : (lang==="ja" ? "サイコロを回す" : "Roll the dice");
 }
 
 $("diceBtn").onclick = async ()=>{
@@ -850,41 +913,52 @@ async function movePlayer(idx, steps){
 /* ===================== square resolution ===================== */
 /* ★まなびの数（＝かせぎ）に応じたいまのしごと */
 function jobTitle(p){
-  const L = p.learn;
-  if(L <= 1) return {ic:"🌾", t:"畑・市場の手伝い"};
-  if(L <= 2) return {ic:"🔧", t:"見習い・日雇いのしごと"};
-  if(L <= 3) return {ic:"🧵", t:"縫製・工房のスタッフ"};
-  if(L <= 4) return {ic:"🏪", t:"お店のリーダー"};
-  if(L <= 5) return {ic:"💻", t:"専門職・エンジニア"};
-  if(L <= 6) return {ic:"🏢", t:"国際企業のスタッフ"};
-  return {ic:"👑", t:"マネージャー・専門家"};
+  const n = p.learn;
+  if(n <= 1) return {ic:"🌾", t:{ja:"畑・市場の手伝い",en:"Field & market helper"}};
+  if(n <= 2) return {ic:"🔧", t:{ja:"見習い・日雇いのしごと",en:"Apprentice & day labor"}};
+  if(n <= 3) return {ic:"🧵", t:{ja:"縫製・工房のスタッフ",en:"Sewing & workshop staff"}};
+  if(n <= 4) return {ic:"🏪", t:{ja:"お店のリーダー",en:"Shop team leader"}};
+  if(n <= 5) return {ic:"💻", t:{ja:"専門職・エンジニア",en:"Specialist & engineer"}};
+  if(n <= 6) return {ic:"🏢", t:{ja:"国際企業のスタッフ",en:"Global company staff"}};
+  return {ic:"👑", t:{ja:"マネージャー・専門家",en:"Manager & expert"}};
 }
 function resolveSquare(idx){
   const p = players[idx];
   const sq = SQUARES[p.pos];
   if(sq.t === "income"){
-    let amt, note, title = sq.name || "おしごと";
+    const ja = lang === "ja";
+    let amt, note, title = L(sq.name) || L(TYPE_META.income.label);
     if(sq.fixed != null){
       amt = sq.fixed;
-      note = "はじめての、自分のかせぎ！";
+      note = ja ? "はじめての、自分のかせぎ！" : "Your first money of your own!";
     } else {
       amt = p.fam.wage + p.learn*p.mult + p.allow;
       const job = jobTitle(p);
-      title = `${job.ic} ${AGES[p.pos]}歳・いまのしごと：${job.t}`;
-      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×${p.mult}万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`;
-      if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——<br>じつは現実のウガンダの平均収入は、日本の<b>約20分の1</b>。このゲームでは、いっしょに遊べるように差をゆるめている。`;
-      if(p.mult < 10) note += `<br>📉 いまの場所では、まなびがかせぎにつながりにくい（★×5万）。<b>スキルが活きる場</b>につながるトビラがあれば——`;
-      if(p.disasterTurns > 0){ amt -= 10; note += `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`; }
+      title = ja ? `${job.ic} ${AGES[p.pos]}歳・いまのしごと：${L(job.t)}` : `${job.ic} Age ${AGES[p.pos]} · Current job: ${L(job.t)}`;
+      note = ja
+        ? `かせぎは <b>基本給${fm(p.fam.wage)} ＋ まなび×${fm(p.mult)}${p.allow>0 ? " ＋ 仕送り"+fm(p.allow) : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`
+        : `Pay = <b>base ${fm(p.fam.wage)} + Learn × ${fm(p.mult)}${p.allow>0 ? " + allowance "+fm(p.allow) : ""}</b><br>As learning grows, your job and pay change too`;
+      if(p.fam.wage < 20) note += ja
+        ? `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——<br>じつは現実のウガンダの平均収入は、日本の<b>約20分の1</b>。このゲームでは、いっしょに遊べるように差をゆるめている。`
+        : `<br>🌍 Same work, different base pay — it depends on where you were born.<br>In reality, average income in Uganda is about <b>1/20th</b> of Japan's. This game softens the gap so everyone can play the same board.`;
+      if(p.mult < 10) note += ja
+        ? `<br>📉 いまの場所では、まなびがかせぎにつながりにくい（★×5万）。<b>スキルが活きる場</b>につながるトビラがあれば——`
+        : `<br>📉 Where you live, learning hardly turns into pay (★×${fm(5)}). If only a door led to <b>a place where skills matter</b>—`;
+      if(p.disasterTurns > 0){ amt -= 10; note += ja
+        ? `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`
+        : `<br>⚠️ Disaster: −${fm(10)} (${p.disasterTurns} turns left)`; }
       if(p.loan > 0){
         const pay = Math.min(6, p.loan);
         p.loan -= pay; amt -= pay;
-        note += `<br>🎓 奨学金の返済 −${pay}万（のこり${p.loan}万）`;
+        note += ja
+          ? `<br>🎓 奨学金の返済 −${pay}万（のこり${p.loan}万）`
+          : `<br>🎓 Scholarship repayment −${fm(pay)} (${fm(p.loan)} left)`;
       }
     }
     showInfoModal("income", title, note, {money:amt}, idx);
   }
   else if(sq.t === "cost"){
-    showInfoModal("cost", sq.name, "生きているとお金はかかる。固定費、だいじ。", {money:-sq.amt}, idx);
+    showInfoModal("cost", L(sq.name), lang==="ja" ? "生きているとお金はかかる。固定費、だいじ。" : "Living costs money. Watch those fixed costs.", {money:-sq.amt}, idx);
   }
   else if(sq.t === "event"){
     if(heavyOn && !p.hadHeavy && p.pos >= 8 && Math.random() < 0.3){
@@ -923,23 +997,25 @@ function drawEvent(idx){
   if(ev.kind === "info"){
     const n = p.perk === "tasukeai" ? 2 : 1;
     const revealed = revealTags(p, ev.reveal, n);
-    let note = revealed > 0 ? `👁 見えていなかった選択肢が <b>${revealed}個</b>、見えるようになった！` : null;
+    let note = revealed > 0 ? (lang==="ja"
+      ? `👁 見えていなかった選択肢が <b>${revealed}個</b>、見えるようになった！`
+      : `👁 <b>${revealed}</b> hidden option${revealed>1?"s":""} became visible!`) : null;
     const deaiNote = checkDeai(p);
     if(deaiNote) note = (note ? note + "<br>" : "") + deaiNote;
-    showInfoModal("event", ev.t, ev.d, {}, idx, note);
+    showInfoModal("event", L(ev.t), L(ev.d), {}, idx, note);
   }
   else if(ev.kind === "fair"){
     showChoiceModal(idx, {
-      title:"NGOの進学説明会が、となりの町まで来た",
-      body:"バス代はかかるけど、行けば情報が手に入る。",
+      title:{ja:"NGOの進学説明会が、となりの町まで来た",en:"An NGO study fair came to the next town"},
+      body:{ja:"バス代はかかるけど、行けば情報が手に入る。",en:"Bus fare costs — but information awaits."},
       opts:[
-        {t:"バスを乗りついで行ってみる", d:"パンフレットと、話を聞ける大人がそこにいる", req:{money:5}, fx:{money:-5}, special:"reveal2"},
-        {t:"今回は見送る", d:"バス代も、ばかにならないから", req:{}, fx:{}},
+        {t:{ja:"バスを乗りついで行ってみる",en:"Take the buses and go"}, d:{ja:"パンフレットと、話を聞ける大人がそこにいる",en:"Pamphlets, and adults you can actually ask"}, req:{money:5}, fx:{money:-5}, special:"reveal2"},
+        {t:{ja:"今回は見送る",en:"Skip it this time"}, d:{ja:"バス代も、ばかにならないから",en:"Bus fare isn't nothing, after all"}, req:{}, fx:{}},
       ]
     }, "event");
   }
   else {
-    showInfoModal("event", ev.t, ev.d, {...ev.fx}, idx);
+    showInfoModal("event", L(ev.t), L(ev.d), {...ev.fx}, idx);
   }
 }
 /* target: "any"=優先順で / それ以外=そのタグを最優先で */
@@ -959,7 +1035,9 @@ function checkDeai(p){
     p.deaiUsed = true;
     p.shienDiscount = true;
     p.learn += 1;
-    return "🎗 はじめて「支援」の存在を知った——出会いがチカラになる！ まなび+1、これから支援・まなび系のトビラのカギが <b>−50万</b> になる。";
+    return lang==="ja"
+      ? "🎗 はじめて「支援」の存在を知った——出会いがチカラになる！ まなび+1、これから支援・まなび系のトビラのカギが <b>−50万</b> になる。"
+      : `🎗 You just learned that support exists — the meeting becomes power! Learn +1, and aid/learning door keys now cost <b>−${fm(50)}</b>.`;
   }
   return null;
 }
@@ -975,33 +1053,36 @@ function triggerHeavy(idx){
     p.allow = 0;
     showChoiceModal(idx, {
       heavy:true,
-      title:"家族が、病気で亡くなった。",
-      body:"しばらくして、暮らしの計算が変わっていることに気づく。<br><b>【この先ずっと：仕送りがなくなる】</b>",
+      title:{ja:"家族が、病気で亡くなった。",en:"Someone in your family died of illness."},
+      body:{ja:"しばらくして、暮らしの計算が変わっていることに気づく。<br><b>【この先ずっと：仕送りがなくなる】</b>",
+            en:"A while later, you notice the math of daily life has changed.<br><b>[From now on: no more allowance]</b>"},
       opts:[
-        {t:"遺児を支える団体・奨学金について調べる", d:"世界には、親を亡くした子を支える仕組みがある", req:{}, fx:{learn:1}, special:"shienSupport"},
-        {t:"今は、何も考えられない", d:"それでいい。時間が必要なときもある", req:{}, fx:{}, special:"letter"},
+        {t:{ja:"遺児を支える団体・奨学金について調べる",en:"Look into orphan-support groups & scholarships"}, d:{ja:"世界には、親を亡くした子を支える仕組みがある",en:"The world has systems for children who lost a parent"}, req:{}, fx:{learn:1}, special:"shienSupport"},
+        {t:{ja:"今は、何も考えられない",en:"You can't think about anything right now"}, d:{ja:"それでいい。時間が必要なときもある",en:"That's okay. Sometimes you need time"}, req:{}, fx:{}, special:"letter"},
       ]
     }, "heavy");
   } else if(p.fam.rural){
     p.disasterTurns = 3;
     showChoiceModal(idx, {
       heavy:true,
-      title:"雨が、何か月も降らない。",
-      body:"干ばつで、畑の作物が枯れていく。井戸の水も減ってきた。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+      title:{ja:"雨が、何か月も降らない。",en:"The rain hasn't come for months."},
+      body:{ja:"干ばつで、畑の作物が枯れていく。井戸の水も減ってきた。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+            en:"Drought is killing the crops. The well is running low.<br><b>[For 3 turns: pay −¥100k]</b>"},
       opts:[
-        {t:"支援団体の食料・種の支援を調べる", d:"こういうときのための仕組みがある", req:{}, fx:{money:30, learn:1}},
-        {t:"たくわえでしのぐ", d:"備えがあれば、乗りこえられる", req:{money:30}, fx:{money:-30}},
+        {t:{ja:"支援団体の食料・種の支援を調べる",en:"Look into food & seed aid"}, d:{ja:"こういうときのための仕組みがある",en:"Systems exist for times like this"}, req:{}, fx:{money:30, learn:1}},
+        {t:{ja:"たくわえでしのぐ",en:"Get by on savings"}, d:{ja:"備えがあれば、乗りこえられる",en:"Being prepared carries you through"}, req:{money:30}, fx:{money:-30}},
       ]
     }, "heavy");
   } else {
     p.disasterTurns = 3;
     showChoiceModal(idx, {
       heavy:true,
-      title:"深夜、大きな地震があった。",
-      body:"家族は無事だった。ただ、家と、親の職場は無事ではなかった。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+      title:{ja:"深夜、大きな地震があった。",en:"A big earthquake struck in the night."},
+      body:{ja:"家族は無事だった。ただ、家と、親の職場は無事ではなかった。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+            en:"Your family is safe. Your home, and your parent's workplace, are not.<br><b>[For 3 turns: pay −¥100k]</b>"},
       opts:[
-        {t:"災害支援制度・義援金について調べる", d:"こういうときのための仕組みがある", req:{}, fx:{money:30, learn:1}},
-        {t:"貯金でしのぐ", d:"備えがあれば、乗りこえられる", req:{money:30}, fx:{money:-30}},
+        {t:{ja:"災害支援制度・義援金について調べる",en:"Look into disaster aid & relief funds"}, d:{ja:"こういうときのための仕組みがある",en:"Systems exist for times like this"}, req:{}, fx:{money:30, learn:1}},
+        {t:{ja:"貯金でしのぐ",en:"Get by on savings"}, d:{ja:"備えがあれば、乗りこえられる",en:"Being prepared carries you through"}, req:{money:30}, fx:{money:-30}},
       ]
     }, "heavy");
   }
@@ -1010,11 +1091,12 @@ function showLetterModal(idx){
   const p = players[idx];
   showChoiceModal(idx, {
     heavy:true,
-    title:"遺児支援団体の人が、家をたずねてきた。",
-    body:"親を亡くした子どもを支える団体が、世界にはあるという。<br>誰かが、ちゃんと気にかけてくれている。",
+    title:{ja:"遺児支援団体の人が、家をたずねてきた。",en:"Someone from an orphan-support group knocked."},
+    body:{ja:"親を亡くした子どもを支える団体が、世界にはあるという。<br>誰かが、ちゃんと気にかけてくれている。",
+          en:"They say groups exist, around the world, that support children who lost a parent.<br>Someone is looking out for you."},
     opts:[
-      {t:"思いきって、話を聞いてみる", d:"支えてくれる仕組みと人は、ちゃんとある", req:{}, fx:{learn:1}, special:"shienSupport"},
-      {t:"まだ、話せない", d:"もらった連絡先は、大切にとっておこう", req:{}, fx:{}, special:"letter"},
+      {t:{ja:"思いきって、話を聞いてみる",en:"Take a breath, and hear them out"}, d:{ja:"支えてくれる仕組みと人は、ちゃんとある",en:"Support systems — and people — do exist"}, req:{}, fx:{learn:1}, special:"shienSupport"},
+      {t:{ja:"まだ、話せない",en:"You can't talk yet"}, d:{ja:"もらった連絡先は、大切にとっておこう",en:"Keep the contact card somewhere safe"}, req:{}, fx:{}, special:"letter"},
     ]
   }, "heavy", true);
 }
@@ -1022,10 +1104,10 @@ function showLetterModal(idx){
 /* ---------- modals ---------- */
 function fxChips(fx){
   const parts = [];
-  if(fx.money) parts.push(`<span class="fx" style="color:${fx.money>0?"#5a9114":"#d24a3c"}">${fx.money>0?"+":""}${fx.money}万</span>`);
-  if(fx.learn) parts.push(`<span class="fx" style="color:#00A3BD">まなび +${fx.learn}</span>`);
+  if(fx.money) parts.push(`<span class="fx" style="color:${fx.money>0?"#5a9114":"#d24a3c"}">${fx.money>0?"+":""}${fm(fx.money)}</span>`);
+  if(fx.learn) parts.push(`<span class="fx" style="color:#00A3BD">${lang==="ja"?"まなび":"Learn"} +${fx.learn}</span>`);
   if(fx.happy) parts.push(`<span class="fx" style="color:#F291B5">♥ +${fx.happy}</span>`);
-  if(!parts.length) parts.push(`<span class="fx">変化なし</span>`);
+  if(!parts.length) parts.push(`<span class="fx">${lang==="ja"?"変化なし":"No change"}</span>`);
   return `<div class="fx-line">${parts.join("")}</div>`;
 }
 function applyFx(p, fx){
@@ -1043,7 +1125,7 @@ function closeModal(){ $("overlay").classList.remove("open"); }
 function showInfoModal(type, title, body, fx, idx, note){
   const m = TYPE_META[type];
   openModal(`
-    <span class="m-tag" style="background:${m.tag}">${m.ic} ${m.label}</span>
+    <span class="m-tag" style="background:${m.tag}">${m.ic} ${L(m.label)}</span>
     <h2>${title}</h2>
     <p class="m-body">${body}</p>
     ${note ? `<div class="m-note">${note}</div>` : ""}
@@ -1067,17 +1149,18 @@ function effectiveLearnReq(p, o){
   return l;
 }
 function reqLabel(p, o){
+  const ja = lang === "ja";
   const parts = [];
   const em = effectiveMoneyReq(p, o);
   const el = effectiveLearnReq(p, o);
   if(o.req.money){
     const memo = [];
-    if(p.shienDiscount && (o.tag === "shien" || o.tag === "manabi")) memo.push("🎗支援サポートで−50万");
-    if(p.perk === "kokusai" && o.tag === "global") memo.push("🌏国際感覚で−50万");
-    parts.push(`おかね ${em}万` + (memo.length ? `（${memo.join("・")}）` : ""));
+    if(p.shienDiscount && (o.tag === "shien" || o.tag === "manabi")) memo.push(ja ? "🎗支援サポートで−50万" : `🎗aid support −${fm(50)}`);
+    if(p.perk === "kokusai" && o.tag === "global") memo.push(ja ? "🌏国際感覚で−50万" : `🌏global sense −${fm(50)}`);
+    parts.push(`${ja?"おかね":"Money"} ${fm(em)}` + (memo.length ? `（${memo.join("・")}）` : ""));
   }
   if(o.req.learn){
-    parts.push(`まなび ★${el}` + (el < o.req.learn ? "（🗣英語ネイティブで−2）" : ""));
+    parts.push(`${ja?"まなび":"Learn"} ★${el}` + (el < o.req.learn ? (ja ? "（🗣英語ネイティブで−2）" : "（🗣native English −2）") : ""));
   }
   return parts.join(" ＋ ");
 }
@@ -1111,7 +1194,7 @@ function showChoiceModal(idx, def, type, skipCount){
         <span class="d-icon">❓</span>
         <span class="d-main">
           <span class="d-title">？？？</span>
-          <span class="d-desc">この選択肢は、見えない。</span>
+          <span class="d-desc">${lang==="ja" ? "この選択肢は、見えない。" : "You can't see this option."}</span>
         </span>
       </button>`;
     }
@@ -1119,25 +1202,27 @@ function showChoiceModal(idx, def, type, skipCount){
     const ok = st === "open";
     /* お金の増減だけは選ぶ前に見せる（★とハートは選ぶまでのお楽しみ） */
     const cost = o.fx.money
-      ? `<span class="d-key d-cost ${o.fx.money<0?"minus":"plus"}">${o.fx.money<0?"💸":"💰"} おかね ${o.fx.money>0?"+":""}${o.fx.money}万${o.special==="shogakukin"?"＋返済":""}</span>`
+      ? `<span class="d-key d-cost ${o.fx.money<0?"minus":"plus"}">${o.fx.money<0?"💸":"💰"} ${lang==="ja"?"おかね":"Money"} ${o.fx.money>0?"+":""}${fm(o.fx.money)}${o.special==="shogakukin" ? (lang==="ja"?"＋返済":" + repayment") : ""}</span>`
       : "";
     return `<button class="door" data-i="${i}" ${ok?"":"disabled"}>
       <span class="d-icon">${ok?"🚪":"🔒"}</span>
       <span class="d-main">
-        <span class="d-title">${o.t}</span>
-        <span class="d-desc">${o.d}</span>
-        ${key?`<span class="d-key">カギ：${key}${ok?"":"（たりない…）"}</span>`:""}${cost}
+        <span class="d-title">${L(o.t)}</span>
+        <span class="d-desc">${L(o.d)}</span>
+        ${key?`<span class="d-key">${lang==="ja"?"カギ：":"Key: "}${key}${ok?"":(lang==="ja"?"（たりない…）":" (not enough…)")}</span>`:""}${cost}
       </span>
     </button>`;
   }).join("");
   const stuck = !states.includes("open");
   openModal(`
-    <span class="m-tag" style="background:${m.tag}">${m.ic} ${def.heavy ? "できごと" : m.label}</span>
-    <h2>${def.title}</h2>
-    <p class="m-body">${def.body}<br><b>${p.name}</b> さん（${AGES[p.pos]}歳）：おかね ${p.money}万 ／ まなび ★${p.learn}</p>
+    <span class="m-tag" style="background:${m.tag}">${m.ic} ${def.heavy ? L(TYPE_META.heavy.label) : L(m.label)}</span>
+    <h2>${L(def.title)}</h2>
+    <p class="m-body">${L(def.body)}<br>${lang==="ja"
+      ? `<b>${p.name}</b> さん（${AGES[p.pos]}歳）：おかね ${fm(p.money)} ／ まなび ★${p.learn}`
+      : `<b>${p.name}</b> (Age ${AGES[p.pos]}): Money ${fm(p.money)} / Learn ★${p.learn}`}</p>
     <div class="door-list">${doors}</div>
-    ${stuck ? `<div class="m-note" style="margin-top:14px">開けられるトビラが、ひとつもなかった…。</div>
-    <button class="m-btn" id="mPass">今回は見送る</button>` : ""}`);
+    ${stuck ? `<div class="m-note" style="margin-top:14px">${lang==="ja" ? "開けられるトビラが、ひとつもなかった…。" : "Not a single door would open…"}</div>
+    <button class="m-btn" id="mPass">${lang==="ja" ? "今回は見送る" : "Pass this time"}</button>` : ""}`);
   if(stuck){
     $("mPass").onclick = ()=>{ closeModal(); endTurn(); };
   }
@@ -1147,20 +1232,21 @@ function showChoiceModal(idx, def, type, skipCount){
       const o = def.opts[+btn.dataset.i];
       const fx = {...o.fx};
       const notes = [];
+      const ja = lang === "ja";
       if(o.special === "revealAll" && p.hidden.size > 0){
         p.hidden.clear();
-        notes.push("👁 いままで見えていなかった選択肢が、ぜんぶ見えるようになった！");
+        notes.push(ja ? "👁 いままで見えていなかった選択肢が、ぜんぶ見えるようになった！" : "👁 Every hidden option is now visible!");
         const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "reveal2"){
         const n = revealTags(p, "any", p.perk === "tasukeai" ? 4 : 2);
-        if(n > 0) notes.push(`👁 見えていなかった選択肢が <b>${n}個</b>、見えるようになった！`);
+        if(n > 0) notes.push(ja ? `👁 見えていなかった選択肢が <b>${n}個</b>、見えるようになった！` : `👁 <b>${n}</b> hidden option${n>1?"s":""} became visible!`);
         const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "shienSupport"){
         p.shienDiscount = true;
         p.hidden.delete("shien");
-        notes.push("🎗 これから先、支援・まなび系のトビラのカギが <b>−50万</b> になる。");
+        notes.push(ja ? "🎗 これから先、支援・まなび系のトビラのカギが <b>−50万</b> になる。" : `🎗 From now on, aid/learning door keys cost <b>−${fm(50)}</b>.`);
         const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "letter"){
@@ -1168,25 +1254,26 @@ function showChoiceModal(idx, def, type, skipCount){
       }
       if(o.unlock && p.mult < 10){
         p.mult = 10;
-        notes.push("🔓 スキルが活きる場につながった！ これから、まなびが <b>★×10万</b> でかせぎになる。");
+        notes.push(ja ? "🔓 スキルが活きる場につながった！ これから、まなびが <b>★×10万</b> でかせぎになる。" : `🔓 You reached a place where skills pay! Learning now earns <b>★×${fm(10)}</b>.`);
       }
       if(o.special === "shogakukin"){
         if(p.shienDiscount || p.perk === "shienPro"){
-          notes.push("🎗 支援を知っていたおかげで<b>返さなくていい奨学金</b>に出会えた！");
+          notes.push(ja ? "🎗 支援を知っていたおかげで<b>返さなくていい奨学金</b>に出会えた！" : "🎗 Because you knew the support system, you found <b>a scholarship you never repay</b>!");
         } else {
           p.loan = 48;
-          notes.push("🎓 これは<b>貸与型</b>（総額48万）。働きはじめたら、かせぎから<b>すこしずつ（−6万）</b>、35歳まで返していく。");
+          notes.push(ja ? "🎓 これは<b>貸与型</b>（総額48万）。働きはじめたら、かせぎから<b>すこしずつ（−6万）</b>、35歳まで返していく。"
+                        : `🎓 This is <b>a loan</b> (${fm(48)} total). Once you work, you repay <b>bit by bit (−${fm(6)})</b> until you're 35.`);
         }
       }
       if(o.tag === "shien" && p.perk === "shienPro" && !p.shienUsed){
         p.shienUsed = true;
         fx.learn = (fx.learn||0) + 1;
-        notes.push("✨ 支援を知っている強みで まなび+1");
+        notes.push(ja ? "✨ 支援を知っている強みで まなび+1" : "✨ Knowing the support system: Learn +1");
       }
       openModal(`
-        <span class="m-tag" style="background:${m.tag}">${m.ic} えらんだ！</span>
-        <h2>${o.t}</h2>
-        <p class="m-body">${o.d}。</p>
+        <span class="m-tag" style="background:${m.tag}">${m.ic} ${ja ? "えらんだ！" : "Chosen!"}</span>
+        <h2>${L(o.t)}</h2>
+        <p class="m-body">${L(o.d)}${ja ? "。" : "."}</p>
         ${notes.length ? `<div class="m-note">${notes.join("<br>")}</div>` : ""}
         ${fxChips(fx)}
         <button class="m-btn" id="mOk">OK</button>`);
@@ -1197,12 +1284,15 @@ function showChoiceModal(idx, def, type, skipCount){
 
 function showGoalModal(idx){
   const p = players[idx];
+  const ja = lang === "ja";
   const loanNote = p.loan > 0
-    ? `<div class="m-note">🎓 のこっていた奨学金 <b>${p.loan}万</b> をここで清算。<br>35歳——ようやく、返しおえた。</div>` : "";
+    ? `<div class="m-note">${ja ? `🎓 のこっていた奨学金 <b>${fm(p.loan)}</b> をここで清算。<br>35歳——ようやく、返しおえた。`
+        : `🎓 The remaining scholarship (<b>${fm(p.loan)}</b>) is settled here.<br>Age 35 — finally paid off.`}</div>` : "";
   openModal(`
-    <span class="m-tag" style="background:#4A3A30">🏁 ゴール</span>
-    <h2>${p.name} さん、35歳でゴール！</h2>
-    <p class="m-body">6歳からの29年間、おつかれさま！ ${p.rankAt}番目のゴールです。<br>全員がゴールしたら、けっか発表へ。</p>
+    <span class="m-tag" style="background:#4A3A30">🏁 ${L(TYPE_META.goal.label)}</span>
+    <h2>${ja ? `${p.name} さん、35歳でゴール！` : `${p.name} reached the goal at 35!`}</h2>
+    <p class="m-body">${ja ? `6歳からの29年間、おつかれさま！ ${p.rankAt}番目のゴールです。<br>全員がゴールしたら、けっか発表へ。`
+      : `29 years from age 6 — well done! You finished #${p.rankAt}.<br>When everyone finishes, on to the results.`}</p>
     ${loanNote}
     ${fxChips({happy: p.rankAt===1?1:0, money: p.loan>0 ? -p.loan : 0})}
     <button class="m-btn" id="mOk">OK</button>`);
@@ -1229,6 +1319,7 @@ function showResult(){
   const sorted = [...players].sort((a,b)=> b.happy - a.happy || b.money - a.money);
   const list = $("resultList");
   list.innerHTML = "";
+  const ja = lang === "ja";
   sorted.forEach((p,i)=>{
     const total = p.open + p.locked + p.unseen;
     const pct = (n)=> total ? Math.round(n/total*100) : 0;
@@ -1236,22 +1327,24 @@ function showResult(){
     const card = document.createElement("div");
     card.className = "res-card";
     card.innerHTML = `
-      <span class="rank">${i+1}位</span>
+      <span class="rank">${ja ? `${i+1}位` : `#${i+1}`}</span>
       <div class="r-name"><span class="p-dot" style="background:${p.color}"></span>${p.name}
-        <span class="r-fam">🏠 ${p.fam.name}</span></div>
-      <div class="r-story">${p.fam.story}</div>
+        <span class="r-fam">🏠 ${L(p.fam.name)}</span></div>
+      <div class="r-story">${L(p.fam.story)}</div>
       <div class="r-stats">
         <span class="fx" style="color:#F291B5">♥ ${p.happy}</span>
-        <span class="fx">残金 ${p.money}万（スタート比 ${diff>=0?"+":""}${diff}万）</span>
-        <span class="fx" style="color:#00A3BD">まなび ★${p.learn}</span>
+        <span class="fx">${ja ? `残金 ${fm(p.money)}（スタート比 ${diff>=0?"+":""}${fm(diff)}）` : `Left: ${fm(p.money)} (${diff>=0?"+":""}${fm(diff)} vs start)`}</span>
+        <span class="fx" style="color:#00A3BD">${ja ? "まなび" : "Learn"} ★${p.learn}</span>
       </div>
       <div class="doorbar">
         <div class="seg-open" style="width:${pct(p.open)}%"></div>
         <div class="seg-lock" style="width:${pct(p.locked)}%"></div>
         <div class="seg-unseen" style="width:${pct(p.unseen)}%"></div>
       </div>
-      <div class="doorbar-label">出会ったトビラ ${total}枚 ── 🚪 開けられた <b>${p.open}</b>／🔒 カギが足りなかった <b>${p.locked}</b>／👁 見えていなかった <b>${p.unseen}</b></div>
-      <button class="chip-btn rv-btn" data-p="${players.indexOf(p)}">🚪 トビラのネタバラシを見る</button>`;
+      <div class="doorbar-label">${ja
+        ? `出会ったトビラ ${total}枚 ── 🚪 開けられた <b>${p.open}</b>／🔒 カギが足りなかった <b>${p.locked}</b>／👁 見えていなかった <b>${p.unseen}</b>`
+        : `${total} doors met ── 🚪 opened <b>${p.open}</b> / 🔒 short of keys <b>${p.locked}</b> / 👁 never saw <b>${p.unseen}</b>`}</div>
+      <button class="chip-btn rv-btn" data-p="${players.indexOf(p)}">${ja ? "🚪 トビラのネタバラシを見る" : "🚪 See this player's door reveal"}</button>`;
     list.appendChild(card);
   });
   list.querySelectorAll(".rv-btn").forEach(b=>{
@@ -1259,7 +1352,7 @@ function showResult(){
   });
 
   const totalUnseen = players.reduce((s,p)=>s+p.unseen, 0);
-  $("insightBox").innerHTML = `
+  $("insightBox").innerHTML = ja ? `
     <b>■ ふりかえりタイム</b><br>
     順位を決めたのは、お金の多さじゃなくて <b>♥ハッピー</b>。<br>
     ♥が多いということは——<b>人生の選択肢をたくさん持ち、じぶんの意思で選べた</b>ということ。<br>
@@ -1274,29 +1367,45 @@ function showResult(){
     ・あなたの家庭カードから見えなかったのは、どんなトビラだった？　逆に、見えていた強みは？<br>
     ・親を亡くしたウガンダの子には、何が「見えて」いた？　それはなぜだろう？<br>
     ・今日あなたが学校に持ってきたもの——スマホ、無料の教科書、給食。それは、どの家庭カードの世界のものだった？<br>
-    ・日本にいる私たちが、世界の遺児にわたせる「カギ」って、何だろう？`;
+    ・日本にいる私たちが、世界の遺児にわたせる「カギ」って、何だろう？` : `
+    <b>■ Reflection time</b><br>
+    The ranking wasn't decided by money, but by <b>♥ Happiness</b>.<br>
+    More ♥ means you <b>held more of life's options — and chose with your own will</b>.<br>
+    But the keys to the ♥ doors were completely different depending on <b>where you were born</b>.<br><br>
+    Across this table, <b>${totalUnseen} doors were never even visible</b>.<br>
+    And that's not only about the Ugandan families — the <b>doors of community support</b> were invisible to the well-off families.<br>
+    Lacking a key, and not knowing a door exists, are very different things.<br><br>
+    🚪 Use each player's <b>Reveal button</b> to peek inside the ？？？.<br><br>
+    🗣 Talk about it:<br>
+    · Same work square, same ★ — completely different pay. Was that about effort?<br>
+    · For those raised in Uganda, more ★ alone didn't raise pay. What was <b>the other key</b> that made learning bear fruit?<br>
+    · Which doors were invisible from your Family Card? And what strengths could you see?<br>
+    · What could the orphan in Uganda "see"? Why?<br>
+    · The things you brought to school today — a phone, free textbooks, school lunch. Which family card's world do they belong to?<br>
+    · What "keys" could we hand to orphans around the world?`;
 }
 
 /* ===================== reveal（ネタバラシ） ===================== */
 function rawReqLabel(o){
   const parts = [];
-  if(o.req.money) parts.push(`おかね${o.req.money}万`);
+  if(o.req.money) parts.push(`${lang==="ja"?"おかね":"Money "}${fm(o.req.money)}`);
   if(o.req.learn) parts.push(`★${o.req.learn}`);
   return parts.join("＋");
 }
 function fxInline(fx){
   const parts = [];
-  if(fx.money) parts.push(`💰${fx.money>0?"+":""}${fx.money}万`);
+  if(fx.money) parts.push(`💰${fx.money>0?"+":""}${fm(fx.money)}`);
   if(fx.learn) parts.push(`★+${fx.learn}`);
   if(fx.happy) parts.push(`♥+${fx.happy}`);
   return parts.join(" ");
 }
 const RV_META = {
-  chosen:["✅","えらんだ"], open:["🚪","開けられた"],
-  locked:["🔒","カギ不足"], unseen:["👁","見えてなかった！"],
+  chosen:["✅",{ja:"えらんだ",en:"Chosen"}], open:["🚪",{ja:"開けられた",en:"Could open"}],
+  locked:["🔒",{ja:"カギ不足",en:"Short of keys"}], unseen:["👁",{ja:"見えてなかった！",en:"Never saw it!"}],
 };
 function showRevealModal(pIdx){
   const p = players[pIdx];
+  const ja = lang === "ja";
   const secs = p.doorLog.map(e=>{
     const rows = e.opts.map((o,i)=>{
       const st = e.chosen === i ? "chosen" : e.states[i];
@@ -1306,23 +1415,24 @@ function showRevealModal(pIdx){
       return `<div class="rv-opt ${st}">
         <span class="rv-ic">${ic}</span>
         <span class="rv-main">
-          <span class="rv-t">${o.t}</span>
-          <span class="rv-d">${o.d}</span>
-          <span class="rv-meta">🔑 ${key || "カギなし"}${fx ? `　→ ${fx}` : ""}</span>
+          <span class="rv-t">${L(o.t)}</span>
+          <span class="rv-d">${L(o.d)}</span>
+          <span class="rv-meta">🔑 ${key || (ja?"カギなし":"No key")}${fx ? `　→ ${fx}` : ""}</span>
         </span>
-        <span class="rv-st">${label}</span>
+        <span class="rv-st">${L(label)}</span>
       </div>`;
     }).join("");
-    return `<div class="rv-door"><div class="rv-title">${e.age != null ? e.age+"歳 ── " : ""}${e.title}${e.variant ? `（${e.variant}）` : ""}</div>${rows}</div>`;
+    return `<div class="rv-door"><div class="rv-title">${e.age != null ? fage(e.age)+" ── " : ""}${L(e.title)}${e.variant ? `（${L(e.variant)}）` : ""}</div>${rows}</div>`;
   }).join("");
   openModal(`
     <div class="rule-page">
-      <button class="rule-close" id="rvClose" aria-label="とじる">✕</button>
-      <span class="m-tag" style="background:var(--brown)">🚪 ネタバラシ</span>
-      <h2>${p.name} さんが出会ったトビラ、ぜんぶ</h2>
-      <p class="m-body">👁は、ゲーム中「？？？」で中身が見えなかったトビラ。<br>ほんとうは、こんな選択肢だった——</p>
-      <div class="rv-list">${secs || "<p class='m-body'>トビラには出会わなかったみたい。</p>"}</div>
-      <button class="m-btn" id="rvOk">とじる</button>
+      <button class="rule-close" id="rvClose" aria-label="close">✕</button>
+      <span class="m-tag" style="background:var(--brown)">🚪 ${ja ? "ネタバラシ" : "The Reveal"}</span>
+      <h2>${ja ? `${p.name} さんが出会ったトビラ、ぜんぶ` : `Every door ${p.name} met`}</h2>
+      <p class="m-body">${ja ? "👁は、ゲーム中「？？？」で中身が見えなかったトビラ。<br>ほんとうは、こんな選択肢だった——"
+        : "👁 marks options hidden as ？？？ during the game.<br>Here's what they really were —"}</p>
+      <div class="rv-list">${secs || `<p class='m-body'>${ja ? "トビラには出会わなかったみたい。" : "Looks like no doors were met."}</p>`}</div>
+      <button class="m-btn" id="rvOk">${ja ? "とじる" : "Close"}</button>
     </div>`);
   $("rvClose").onclick = closeModal;
   $("rvOk").onclick = closeModal;
@@ -1359,6 +1469,7 @@ function showAllDoorsModal(){
         perOpt:def.opts.map(()=>({chosen:[], locked:[], unseen:[]})), untrodden:true});
     });
   });
+  const ja = lang === "ja";
   const groups = [...map.values()].sort((a,b)=>a.age-b.age);
   const secs = groups.map(g=>{
     const rows = g.opts.map((o,i)=>{
@@ -1366,29 +1477,30 @@ function showAllDoorsModal(){
       const key = rawReqLabel(o);
       const fx = fxInline(o.fx);
       const lines = [];
-      if(st.chosen.length) lines.push(`<div class="rv-who">✅ えらんだ：${whoChips(st.chosen)}</div>`);
-      if(st.locked.length) lines.push(`<div class="rv-who">🔒 カギ不足：${whoChips(st.locked)}</div>`);
-      if(st.unseen.length) lines.push(`<div class="rv-who" style="color:#c77f00">👁 見えなかった：${whoChips(st.unseen)}</div>`);
+      if(st.chosen.length) lines.push(`<div class="rv-who">✅ ${ja?"えらんだ":"Chose"}：${whoChips(st.chosen)}</div>`);
+      if(st.locked.length) lines.push(`<div class="rv-who">🔒 ${ja?"カギ不足":"Short of keys"}：${whoChips(st.locked)}</div>`);
+      if(st.unseen.length) lines.push(`<div class="rv-who" style="color:#c77f00">👁 ${ja?"見えなかった":"Couldn't see"}：${whoChips(st.unseen)}</div>`);
       return `<div class="rv-opt ${st.unseen.length ? "unseen" : ""}">
         <span class="rv-main">
-          <span class="rv-t">${o.t}</span>
-          <span class="rv-d">${o.d}</span>
-          <span class="rv-meta">🔑 ${key || "カギなし"}${fx ? `　→ ${fx}` : ""}</span>
+          <span class="rv-t">${L(o.t)}</span>
+          <span class="rv-d">${L(o.d)}</span>
+          <span class="rv-meta">🔑 ${key || (ja?"カギなし":"No key")}${fx ? `　→ ${fx}` : ""}</span>
           ${lines.join("")}
         </span>
       </div>`;
     }).join("");
     return `<div class="rv-door"${g.untrodden ? ' style="opacity:.75"' : ""}>
-      <div class="rv-title">🚪 ${g.age}歳 ── ${g.title}${g.variant ? `（${g.variant}）` : ""}${g.untrodden ? '<span class="rv-untrod">🚶 だれも通らなかった</span>' : ""}</div>${rows}</div>`;
+      <div class="rv-title">🚪 ${fage(g.age)} ── ${L(g.title)}${g.variant ? `（${L(g.variant)}）` : ""}${g.untrodden ? `<span class="rv-untrod">🚶 ${ja?"だれも通らなかった":"no one passed here"}</span>` : ""}</div>${rows}</div>`;
   }).join("");
   openModal(`
     <div class="rule-page">
-      <button class="rule-close" id="adClose" aria-label="とじる">✕</button>
-      <span class="m-tag" style="background:var(--brown)">🚪 トビラ一覧</span>
-      <h2>29年間に、こんなトビラがあった</h2>
-      <p class="m-body">年齢の順に、この人生にあったトビラをぜんぶ並べた。<br>出会えたトビラも、通らなかったトビラも——見えていた景色は人それぞれ。</p>
-      <div class="rv-list">${secs || "<p class='m-body'>記録がありません。</p>"}</div>
-      <button class="m-btn" id="adOk">とじる</button>
+      <button class="rule-close" id="adClose" aria-label="close">✕</button>
+      <span class="m-tag" style="background:var(--brown)">🚪 ${ja ? "トビラ一覧" : "All Doors"}</span>
+      <h2>${ja ? "29年間に、こんなトビラがあった" : "The doors of these 29 years"}</h2>
+      <p class="m-body">${ja ? "年齢の順に、この人生にあったトビラをぜんぶ並べた。<br>出会えたトビラも、通らなかったトビラも——見えていた景色は人それぞれ。"
+        : "Every door in this life, in age order.<br>Doors you met and doors no one passed — what each player could see was different."}</p>
+      <div class="rv-list">${secs || `<p class='m-body'>${ja ? "記録がありません。" : "No records."}</p>`}</div>
+      <button class="m-btn" id="adOk">${ja ? "とじる" : "Close"}</button>
     </div>`);
   $("adClose").onclick = closeModal;
   $("adOk").onclick = closeModal;
@@ -1397,55 +1509,56 @@ $("allDoorsBtn").onclick = showAllDoorsModal;
 
 /* ===================== rules ===================== */
 const RULE_PAGES = [
-  {tag:"🌍 このゲームは", title:"世界のどこかに、生まれる", items:[
-    ["🌍","あなたは、世界のどこかの家庭に生まれます。<b>生まれる場所は、選べません</b>。"],
-    ["🎲","サイコロも盤面も、みんなおなじ。でも、<b>見える景色</b>は人によってちがう——それがこのゲームです。"],
-    ["🚪","同じマスに止まっても、開けられるトビラ・見えるトビラがちがうかも。理由は、遊びおわってから分かります。"],
+  {tag:{ja:"🌍 このゲームは",en:"🌍 This game"}, title:{ja:"世界のどこかに、生まれる",en:"Born somewhere in the world"}, items:[
+    ["🌍",{ja:"あなたは、世界のどこかの家庭に生まれます。<b>生まれる場所は、選べません</b>。",en:"You are born into a family somewhere in the world. <b>You don't choose where.</b>"}],
+    ["🎲",{ja:"サイコロも盤面も、みんなおなじ。でも、<b>見える景色</b>は人によってちがう——それがこのゲームです。",en:"Same dice, same board for everyone. But <b>what you can see</b> is different — that's this game."}],
+    ["🚪",{ja:"同じマスに止まっても、開けられるトビラ・見えるトビラがちがうかも。理由は、遊びおわってから分かります。",en:"On the same square, the doors you can open — or even see — may differ. You'll learn why after the game."}],
   ]},
-  {tag:"🏁 めざすもの", title:"順位を決めるのは ♥ハッピー", items:[
-    ["🎲","これは<b>6歳から35歳までの29年間</b>をたどる人生すごろく。サイコロを回して、みんなでゴールをめざそう。"],
-    ["🧒","<b>子ども時代（6〜15歳）はサイコロを使わず、1マスずつ</b>進む。人生の土台をつくる時間だ。"],
-    ["♥","最後の順位は、おかねの多さじゃなく <b>♥ハッピーの数</b>で決まる！"],
-    ["🚪","♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。<b>♥の数＝じぶんの意思で選べた数</b>だ。"],
+  {tag:{ja:"🏁 めざすもの",en:"🏁 The goal"}, title:{ja:"順位を決めるのは ♥ハッピー",en:"Ranking is decided by ♥ Happiness"}, items:[
+    ["🎲",{ja:"これは<b>6歳から35歳までの29年間</b>をたどる人生すごろく。サイコロを回して、みんなでゴールをめざそう。",en:"This board traces <b>29 years, from age 6 to 35</b>. Roll the dice and head for the goal together."}],
+    ["🧒",{ja:"<b>子ども時代（6〜15歳）はサイコロを使わず、1マスずつ</b>進む。人生の土台をつくる時間だ。",en:"<b>In childhood (6–15) there's no dice — one square at a time.</b> These years build your base."}],
+    ["♥",{ja:"最後の順位は、おかねの多さじゃなく <b>♥ハッピーの数</b>で決まる！",en:"The final ranking isn't about money — it's the number of <b>♥ Happiness</b>!"}],
+    ["🚪",{ja:"♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。<b>♥の数＝じぶんの意思で選べた数</b>だ。",en:"You earn ♥ by opening life's <b>Doors</b>. <b>♥ = how often you chose with your own will.</b>"}],
   ]},
-  {tag:"🚪 トビラとカギ", title:"いい選択には「カギ」がいる", items:[
-    ["🚪","茶色い<b>トビラのマス</b>に止まると、人生の選択がやってくる。"],
-    ["🔑","選択肢には<b>カギ</b>（必要な💰おかね・★まなび）があるものも。"],
-    ["🔒","カギが足りないと、そのトビラは開けられない…！"],
+  {tag:{ja:"🚪 トビラとカギ",en:"🚪 Doors & keys"}, title:{ja:"いい選択には「カギ」がいる",en:"Good choices need keys"}, items:[
+    ["🚪",{ja:"茶色い<b>トビラのマス</b>に止まると、人生の選択がやってくる。",en:"Land on a brown <b>Door square</b> and a life choice arrives."}],
+    ["🔑",{ja:"選択肢には<b>カギ</b>（必要な💰おかね・★まなび）があるものも。",en:"Some options have <b>keys</b> — 💰money or ★learning you must have."}],
+    ["🔒",{ja:"カギが足りないと、そのトビラは開けられない…！",en:"Without the keys, that door won't open…!"}],
   ]},
-  {tag:"📚 まなびとおかね", title:"★まなびは、未来のカギ", items:[
-    ["📚","<b>まなびマス</b>やトビラ、🎴できごとで★まなびが貯まる。"],
-    ["💰","かせぎは「<b>基本給＋★×掛け率</b>」。基本給も、★がかせぎになる度合いも、生まれた場所でちがう…！"],
-    ["🎴","<b>できごとマス</b>では、ラッキーもアクシデントも起こる。"],
+  {tag:{ja:"📚 まなびとおかね",en:"📚 Learning & money"}, title:{ja:"★まなびは、未来のカギ",en:"★ Learning is a future key"}, items:[
+    ["📚",{ja:"<b>まなびマス</b>やトビラ、🎴できごとで★まなびが貯まる。",en:"Collect ★ from <b>Learning squares</b>, doors, and 🎴 events."}],
+    ["💰",{ja:"かせぎは「<b>基本給＋★×掛け率</b>」。基本給も、★がかせぎになる度合いも、生まれた場所でちがう…！",en:"Pay = <b>base + ★ × rate</b>. Both base pay and how much ★ turns into pay depend on where you were born…!"}],
+    ["🎴",{ja:"<b>できごとマス</b>では、ラッキーもアクシデントも起こる。",en:"<b>Event squares</b> bring both luck and accidents."}],
   ]},
-  {tag:"🏠 家庭カード", title:"スタート地点は、国によってちがう", items:[
-    ["🏠","はじめに引く<b>家庭カード</b>で、生まれる国・持ちもの・基本給が変わる。"],
-    ["👁","とちゅうで「？？？」の選択肢に出会うかも。それが何なのかは——遊びおわってからのお楽しみ。"],
-    ["🗣","全員ゴールしたら<b>ふりかえりタイム</b>。感じたことを話してみよう。"],
+  {tag:{ja:"🏠 家庭カード",en:"🏠 Family Cards"}, title:{ja:"スタート地点は、国によってちがう",en:"Your start depends on where you're born"}, items:[
+    ["🏠",{ja:"はじめに引く<b>家庭カード</b>で、生まれる国・持ちもの・基本給が変わる。",en:"The <b>Family Card</b> you draw sets your country, belongings, and base pay."}],
+    ["👁",{ja:"とちゅうで「？？？」の選択肢に出会うかも。それが何なのかは——遊びおわってからのお楽しみ。",en:"You may meet ？？？ options along the way. What they are — you'll find out after the game."}],
+    ["🗣",{ja:"全員ゴールしたら<b>ふりかえりタイム</b>。感じたことを話してみよう。",en:"When everyone finishes: <b>reflection time</b>. Talk about what you felt."}],
   ]},
-  {tag:"🇺🇬 なぜウガンダ？", title:"実在する場所と、実在する支え", items:[
-    ["🗺","このゲームの舞台のひとつ、ウガンダは実在の国。病気や紛争で親を亡くした子どもたちが、たくさん暮らしています。"],
-    ["🎗","あしなが育英会は<b>「あしながウガンダ」</b>で、現地の遺児の教育を実際に支えています。ゲームに出てくる「支援団体」のモデルです。"],
-    ["🤝","ゲームの中で見えた「支え」は、現実の世界にもある。ふりかえりで、日本にいる私たちにできることを話してみよう。"],
+  {tag:{ja:"🇺🇬 なぜウガンダ？",en:"🇺🇬 Why Uganda?"}, title:{ja:"実在する場所と、実在する支え",en:"A real place, and real support"}, items:[
+    ["🗺",{ja:"このゲームの舞台のひとつ、ウガンダは実在の国。病気や紛争で親を亡くした子どもたちが、たくさん暮らしています。",en:"Uganda, one of this game's settings, is a real country — home to many children who lost parents to illness or conflict."}],
+    ["🎗",{ja:"あしなが育英会は<b>「あしながウガンダ」</b>で、現地の遺児の教育を実際に支えています。ゲームに出てくる「支援団体」のモデルです。",en:"The Ashinaga Foundation really supports orphans' education there through <b>Ashinaga Uganda</b> — the model for the \"aid groups\" in this game."}],
+    ["🤝",{ja:"ゲームの中で見えた「支え」は、現実の世界にもある。ふりかえりで、日本にいる私たちにできることを話してみよう。",en:"The support you saw in the game exists in the real world too. In reflection time, talk about what we can do."}],
   ]},
 ];
 function renderRules(page){
+  const ja = lang === "ja";
   const pg = RULE_PAGES[page];
   const items = pg.items.map(([ic,tx])=>
-    `<div class="rule-item"><span class="r-ic">${ic}</span><span>${tx}</span></div>`).join("");
+    `<div class="rule-item"><span class="r-ic">${ic}</span><span>${L(tx)}</span></div>`).join("");
   const dots = RULE_PAGES.map((_,i)=>`<span class="${i===page?"on":""}"></span>`).join("");
   const last = page === RULE_PAGES.length-1;
   openModal(`
     <div class="rule-page">
-      <button class="rule-close" id="ruleClose" aria-label="とじる">✕</button>
-      <span class="m-tag" style="background:var(--teal)">${pg.tag}</span>
-      <h2>${pg.title}</h2>
+      <button class="rule-close" id="ruleClose" aria-label="close">✕</button>
+      <span class="m-tag" style="background:var(--teal)">${L(pg.tag)}</span>
+      <h2>${L(pg.title)}</h2>
       <div class="rule-list">${items}</div>
       <div class="rule-dots">${dots}</div>
       <div class="rule-nav">
-        ${page>0 ? '<button class="m-btn ghost" id="rulePrev">← まえ</button>' : ""}
-        ${last ? '<button class="m-btn" id="ruleDone">OK！</button>'
-               : '<button class="m-btn" id="ruleNext">つぎへ →</button>'}
+        ${page>0 ? `<button class="m-btn ghost" id="rulePrev">${ja ? "← まえ" : "← Back"}</button>` : ""}
+        ${last ? `<button class="m-btn" id="ruleDone">${ja ? "OK！" : "OK!"}</button>`
+               : `<button class="m-btn" id="ruleNext">${ja ? "つぎへ →" : "Next →"}</button>`}
       </div>
     </div>`);
   $("ruleClose").onclick = closeModal;
