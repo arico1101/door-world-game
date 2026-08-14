@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トビラ せかい版 — 世界の遺児と、おかねと選択肢の人生すごろく</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#78BE21; --crimson:#FF6858; --orange:#FFC04B; --teal:#00A3BD;
+  --brown:#4A3A30; --cream:#FBF8F1; --paper:#FFFFFF;
+  --fuji:#B58BD9; --momo:#F291B5; --stone:#B9AFA5;
+  --shadow:0 4px 0 rgba(74,58,48,.18);
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:"Zen Maru Gothic",'Hiragino Maru Gothic ProN',sans-serif;
+  background:var(--cream); color:var(--brown);
+  background-image:radial-gradient(rgba(74,58,48,.05) 1.2px, transparent 1.2px);
+  background-size:26px 26px;
+}
+button{font-family:inherit; cursor:pointer; border:none;}
+.screen{display:none; min-height:100vh;}
+.screen.active{display:block;}
+
+/* ---------- setup ---------- */
+#setup{display:none; place-items:center; padding:24px;}
+#setup.active{display:grid;}
+.setup-card{width:min(560px,100%); text-align:center;}
+.title-door{
+  width:120px; height:150px; margin:0 auto 14px; position:relative;
+  background:var(--brown); border-radius:60px 60px 8px 8px;
+  display:grid; place-items:center; box-shadow:var(--shadow);
+}
+.title-door .leaf{
+  width:96px; height:126px; border-radius:48px 48px 6px 6px;
+  background:var(--orange); position:relative; transition:transform .6s cubic-bezier(.2,.8,.3,1.2);
+  transform-origin:left center;
+}
+.title-door:hover .leaf{transform:perspective(400px) rotateY(-38deg);}
+.title-door .knob{position:absolute; right:12px; top:64px; width:12px; height:12px; border-radius:50%; background:var(--teal);}
+h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.12em;}
+.game-sub{font-size:15px; font-weight:700; margin:6px 0 26px; opacity:.75;}
+.player-inputs{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+.p-row{display:flex; align-items:center; gap:10px; background:var(--paper); border:2px solid var(--brown); border-radius:14px; padding:8px 12px; box-shadow:var(--shadow);}
+.p-dot{width:22px; height:22px; border-radius:50%; flex:none; border:2px solid var(--brown);}
+.p-row input{flex:1; border:none; outline:none; font-family:inherit; font-size:17px; font-weight:700; color:var(--brown); background:transparent; min-width:0;}
+.p-row .rm{background:transparent; font-size:18px; color:var(--crimson); font-weight:900; padding:2px 6px;}
+.row-btns{display:flex; gap:10px; justify-content:center; margin-bottom:18px;}
+.chip-btn{background:var(--paper); border:2px solid var(--brown); border-radius:999px; padding:8px 18px; font-weight:700; font-size:14px; color:var(--brown); box-shadow:var(--shadow);}
+.fac-toggle{
+  display:flex; align-items:flex-start; gap:8px; text-align:left;
+  background:var(--paper); border:2px dashed var(--brown); border-radius:14px;
+  padding:12px 14px; font-size:13px; font-weight:700; line-height:1.7;
+  margin:0 auto 22px; width:min(460px,100%); cursor:pointer;
+}
+.fac-toggle input{width:18px; height:18px; margin-top:3px; accent-color:var(--crimson); flex:none;}
+.big-btn{
+  display:inline-block; background:var(--green); color:#fff; font-size:20px; font-weight:900;
+  padding:16px 44px; border-radius:999px; letter-spacing:.1em;
+  box-shadow:0 6px 0 #5a9114; transition:transform .08s;
+}
+.big-btn:active{transform:translateY(4px); box-shadow:0 2px 0 #5a9114;}
+.setup-note{margin-top:18px; font-size:13px; line-height:1.8; opacity:.75;}
+
+/* ---------- game ---------- */
+#game{padding:12px 12px 120px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:1100px; margin:0 auto 10px;}
+.topbar .logo{font-weight:900; font-size:18px; letter-spacing:.1em;}
+.turn-pill{
+  background:var(--paper); border:2px solid var(--brown); border-radius:999px;
+  padding:8px 18px; font-weight:900; font-size:clamp(15px,2.6vw,20px); box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:8px;
+}
+.turn-pill .p-dot{width:16px;height:16px;}
+.players-strip{
+  display:flex; gap:8px; overflow-x:auto; max-width:1100px; margin:0 auto 12px; padding-bottom:4px;
+}
+.pcard{
+  flex:1 0 156px; background:var(--paper); border:2px solid var(--brown); border-radius:14px;
+  padding:8px 10px; box-shadow:var(--shadow); font-size:12px; position:relative; opacity:.6; transition:opacity .2s;
+}
+.pcard.now{opacity:1; outline:3px solid var(--orange);}
+.pcard.done{opacity:.45;}
+.pcard .nm{font-weight:900; font-size:14px; display:flex; align-items:center; gap:6px; margin-bottom:4px;}
+.pcard .nm .p-dot{width:13px;height:13px;}
+.pcard .stat{display:flex; justify-content:space-between; font-weight:700;}
+.pcard .stat b{font-family:"DotGothic16",monospace; font-size:14px;}
+.neg{color:var(--crimson);}
+.board-wrap{max-width:1100px; margin:0 auto; overflow-x:auto;}
+.board{display:grid; grid-template-columns:repeat(6,1fr); gap:8px; min-width:560px; padding:6px;}
+.sq{
+  position:relative; aspect-ratio:1/1; border-radius:14px; border:2px solid var(--brown);
+  background:var(--paper); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font-size:clamp(9px,1.4vw,12px); font-weight:700; text-align:center; padding:4px;
+}
+.sq .num{position:absolute; top:4px; left:7px; font-family:"DotGothic16",monospace; font-size:11px; opacity:.5;}
+.sq .ic{font-size:clamp(14px,2.4vw,22px); line-height:1;}
+.sq.t-income{background:#EDF7DC; border-color:var(--green);}
+.sq.t-cost{background:#FFE9E7; border-color:var(--crimson);}
+.sq.t-event{background:#FFF3DC; border-color:var(--orange);}
+.sq.t-learn{background:#E0F4F8; border-color:var(--teal);}
+.sq.t-choice{background:var(--brown); color:var(--cream); border-color:var(--brown);}
+.sq.t-choice .num{color:var(--cream); opacity:.6;}
+.sq.t-start,.sq.t-goal{background:var(--cream); border-width:3px;}
+.sq .tokens{position:absolute; bottom:3px; left:0; right:0; display:flex; justify-content:center; gap:2px; flex-wrap:wrap; padding:0 3px;}
+.tok{width:clamp(10px,1.8vw,16px); height:clamp(10px,1.8vw,16px); border-radius:50%; border:2px solid var(--brown); box-shadow:0 2px 0 rgba(74,58,48,.3); transition:transform .15s;}
+.tok.hop{transform:translateY(-5px) scale(1.2);}
+.controls{
+  position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  display:flex; justify-content:center; z-index:50; pointer-events:none;
+}
+.dice-btn{
+  pointer-events:auto;
+  background:var(--crimson); color:#fff; font-size:22px; font-weight:900; letter-spacing:.08em;
+  padding:16px 52px; border-radius:999px; box-shadow:0 6px 0 #d24a3c;
+  display:flex; align-items:center; gap:12px; transition:transform .08s;
+}
+.dice-btn:active{transform:translateY(4px); box-shadow:0 2px 0 #d24a3c;}
+.dice-btn:disabled{opacity:.5; cursor:default;}
+.dice-face{
+  background:#fff; color:var(--brown); border-radius:10px; width:40px; height:40px;
+  display:grid; place-items:center; font-family:"DotGothic16",monospace; font-size:24px;
+}
+
+/* ---------- rules ---------- */
+.help-btn{
+  background:var(--paper); border:2px solid var(--brown); border-radius:999px;
+  width:38px; height:38px; font-weight:900; font-size:18px; color:var(--brown);
+  box-shadow:var(--shadow); flex:none;
+}
+.rule-page{position:relative; text-align:left;}
+.rule-close{
+  position:absolute; top:-8px; right:-4px; background:transparent;
+  font-size:20px; font-weight:900; color:var(--brown); padding:4px 8px; opacity:.6;
+}
+.rule-list{display:flex; flex-direction:column; gap:10px;}
+.rule-item{
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--paper); border:2px solid var(--brown); border-radius:14px;
+  padding:12px 14px; font-size:14px; line-height:1.8; font-weight:700;
+}
+.rule-item .r-ic{font-size:22px; flex:none; line-height:1.5;}
+.rule-dots{display:flex; gap:8px; justify-content:center; margin:16px 0 4px;}
+.rule-dots span{width:10px; height:10px; border-radius:50%; background:#D8CFC2; border:2px solid var(--brown);}
+.rule-dots span.on{background:var(--orange);}
+.rule-nav{display:flex; gap:10px; justify-content:center; margin-top:10px;}
+.rule-nav .m-btn{margin:0;}
+.rule-nav .m-btn.ghost{background:var(--paper); color:var(--brown); border:2px solid var(--brown); box-shadow:var(--shadow);}
+
+/* ---------- reveal（ネタバラシ） ---------- */
+.rv-btn{margin-top:10px; font-size:13px;}
+.rv-list{display:flex; flex-direction:column; gap:14px; margin-bottom:14px;}
+.rv-door{background:var(--paper); border:2px solid var(--brown); border-radius:14px; padding:12px 14px;}
+.rv-title{font-weight:900; font-size:15px; margin-bottom:8px;}
+.rv-opt{display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:10px; border:2px solid transparent; text-align:left;}
+.rv-opt + .rv-opt{margin-top:6px;}
+.rv-opt.chosen{background:#EDF7DC; border-color:var(--green);}
+.rv-opt.locked{background:#F3EFE8;}
+.rv-opt.unseen{background:#FFF3DC; border-color:var(--orange); border-style:dashed;}
+.rv-ic{font-size:18px; flex:none;}
+.rv-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.rv-t{font-weight:900; font-size:13.5px;}
+.rv-d{font-size:12px; opacity:.8; line-height:1.6;}
+.rv-meta{font-size:12px; font-weight:700;}
+.rv-st{flex:none; font-size:11px; font-weight:900; opacity:.75; padding-top:3px;}
+
+/* ---------- modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(74,58,48,.5); z-index:100;
+  display:none; place-items:center; padding:16px;
+}
+.overlay.open{display:grid;}
+.modal{
+  width:min(620px,100%); max-height:88vh; overflow-y:auto;
+  background:var(--cream); border:3px solid var(--brown); border-radius:22px;
+  padding:26px 22px; box-shadow:0 8px 0 rgba(74,58,48,.25);
+  animation:pop .25s cubic-bezier(.2,.8,.3,1.2);
+}
+@keyframes pop{from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;}}
+.modal .m-tag{
+  display:inline-block; font-size:12px; font-weight:900; letter-spacing:.15em;
+  padding:4px 14px; border-radius:999px; color:#fff; margin-bottom:12px;
+}
+.modal h2{font-size:clamp(20px,4.5vw,26px); font-weight:900; margin-bottom:10px; line-height:1.4;}
+.modal .m-body{font-size:15px; line-height:1.9; margin-bottom:18px;}
+.m-note{
+  background:var(--paper); border:2px solid var(--teal); border-radius:12px;
+  padding:10px 14px; font-size:13.5px; font-weight:700; line-height:1.8; margin-bottom:14px;
+}
+.fx-line{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px;}
+.fx{
+  background:var(--paper); border:2px solid var(--brown); border-radius:999px;
+  padding:5px 14px; font-weight:900; font-size:14px; font-family:"DotGothic16",monospace;
+}
+.door-list{display:flex; flex-direction:column; gap:12px; margin-bottom:8px;}
+.door{
+  display:flex; align-items:center; gap:14px; text-align:left; width:100%;
+  background:var(--paper); border:2px solid var(--brown); border-radius:16px;
+  padding:14px; box-shadow:var(--shadow); transition:transform .08s; color:var(--brown);
+}
+.door:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(74,58,48,.18);}
+.door:disabled{background:#EEE8DE; opacity:.8; cursor:not-allowed;}
+.door.unseen{background:#E7E0D6; border-style:dashed; opacity:.75;}
+.door .d-icon{
+  flex:none; width:44px; height:54px; border-radius:22px 22px 4px 4px;
+  background:var(--teal); border:2px solid var(--brown);
+  display:grid; place-items:center; font-size:20px;
+}
+.door:disabled .d-icon{background:var(--stone);}
+.door.unseen .d-icon{background:#CFC6B9; border-style:dashed;}
+.door .d-main{flex:1; min-width:0;}
+.door .d-title{font-weight:900; font-size:16px; margin-bottom:3px;}
+.door .d-desc{font-size:12.5px; line-height:1.6; opacity:.85;}
+.door .d-key{
+  margin-top:5px; display:inline-block; font-size:11.5px; font-weight:900;
+  background:var(--brown); color:var(--cream); border-radius:999px; padding:2px 10px;
+}
+.door:disabled:not(.unseen) .d-key{background:var(--crimson);}
+.m-btn{
+  display:block; margin:8px auto 0; background:var(--brown); color:var(--cream);
+  font-size:17px; font-weight:900; padding:13px 42px; border-radius:999px;
+  box-shadow:0 5px 0 rgba(0,0,0,.25); letter-spacing:.08em; transition:transform .08s;
+}
+.m-btn:active{transform:translateY(3px);}
+.fam-card{
+  background:var(--paper); border:2px solid var(--brown); border-radius:16px;
+  padding:16px; text-align:left; margin-bottom:14px; box-shadow:var(--shadow);
+}
+.fam-card .f-name{font-weight:900; font-size:18px; margin-bottom:8px;}
+.fam-card .f-story{font-size:14px; line-height:1.9; margin-bottom:12px;}
+.fam-card .f-stats{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;}
+.fam-card .f-stats span b{font-family:"DotGothic16",monospace;}
+
+/* ---------- result ---------- */
+#result{padding:32px 16px 60px;}
+.res-inner{max-width:720px; margin:0 auto;}
+#result h1{font-size:clamp(26px,6vw,38px); font-weight:900; text-align:center; margin-bottom:6px; letter-spacing:.08em;}
+.res-sub{text-align:center; font-weight:700; margin-bottom:26px; opacity:.75;}
+.res-card{
+  background:var(--paper); border:2px solid var(--brown); border-radius:18px;
+  padding:16px 18px 18px; margin-bottom:16px; box-shadow:var(--shadow); position:relative;
+}
+.res-card .rank{
+  position:absolute; top:-12px; left:-8px; background:var(--orange); border:2px solid var(--brown);
+  border-radius:999px; padding:3px 14px; font-weight:900; font-size:14px;
+}
+.res-card .r-name{font-weight:900; font-size:19px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.res-card .r-fam{font-size:13px; font-weight:900; color:var(--teal);}
+.res-card .r-story{font-size:12.5px; line-height:1.7; opacity:.8; margin:6px 0 10px;}
+.r-stats{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+.r-stats .fx{font-size:13px;}
+.doorbar{display:flex; height:16px; border-radius:999px; background:#E4DDD2; overflow:hidden; border:2px solid var(--brown);}
+.doorbar .seg-open{background:var(--teal);}
+.doorbar .seg-lock{background:var(--stone);}
+.doorbar .seg-unseen{background:var(--brown);}
+.doorbar-label{font-size:12px; font-weight:700; margin-top:6px; line-height:1.7; opacity:.9;}
+.insight{
+  background:var(--brown); color:var(--cream); border-radius:20px; padding:22px;
+  margin-top:26px; line-height:2; font-size:15px; font-weight:700;
+}
+.insight b{color:var(--orange);}
+.res-btns{text-align:center; margin-top:26px;}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== SETUP ========== -->
+<section id="setup" class="screen active">
+  <div class="setup-card">
+    <div class="title-door" aria-hidden="true"><div class="leaf"></div><div class="knob"></div></div>
+    <h1 class="game-title">トビラ</h1>
+    <p class="game-sub">🌍 せかい版 ─ 世界の遺児と、おかねと選択肢の人生すごろく（2〜6人・約25分）</p>
+    <div class="player-inputs" id="playerInputs"></div>
+    <div class="row-btns">
+      <button class="chip-btn" id="addPlayer">＋ プレイヤーを追加</button>
+      <button class="chip-btn" id="helpBtnSetup">❓ あそびかた</button>
+    </div>
+    <label class="fac-toggle">
+      <input type="checkbox" id="heavyToggle">
+      <span>⚠️ 死別・干ばつなどのライフイベントを含める<br>
+      <small>ファシリテーター向け設定。参加者の状況にあわせてONにしてください。</small></span>
+    </label>
+    <button class="big-btn" id="startBtn">スタート！</button>
+    <p class="setup-note">
+      はじめに、それぞれが<b>「家庭カード」</b>をこっそり引きます。<br>
+      生まれる国と家庭は、自分では選べない。<br>
+      1台の画面を囲んで、順番にサイコロを回して遊ぼう。
+    </p>
+  </div>
+</section>
+
+<!-- ========== GAME ========== -->
+<section id="game" class="screen">
+  <div class="topbar">
+    <div class="logo">🌍 トビラ せかい版</div>
+    <div class="turn-pill" id="turnPill"></div>
+    <button class="help-btn" id="helpBtnGame" aria-label="あそびかた">？</button>
+  </div>
+  <div class="players-strip" id="playersStrip"></div>
+  <div class="board-wrap"><div class="board" id="board"></div></div>
+  <div class="controls">
+    <button class="dice-btn" id="diceBtn">
+      <span class="dice-face" id="diceFace">?</span>
+      <span>サイコロを回す</span>
+    </button>
+  </div>
+</section>
+
+<!-- ========== RESULT ========== -->
+<section id="result" class="screen">
+  <div class="res-inner">
+    <h1>🎉 けっか はっぴょう</h1>
+    <p class="res-sub">順位は「ハッピー」の数で決まります — そして、家庭カードの公開</p>
+    <div id="resultList"></div>
+    <div class="insight" id="insightBox"></div>
+    <div class="res-btns"><button class="big-btn" id="againBtn">もういちど遊ぶ</button></div>
+  </div>
+</section>
+
+<!-- ========== MODAL ========== -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+"use strict";
+/* ===================== data ===================== */
+const PCOLORS = ["#78BE21","#FF6858","#FFC04B","#00A3BD","#B58BD9","#F291B5"];
+const TYPE_META = {
+  start:{label:"スタート", ic:"🌱", tag:"#78BE21"},
+  goal:{label:"ゴール", ic:"🏁", tag:"#4A3A30"},
+  income:{label:"おしごと", ic:"💰", tag:"#78BE21"},
+  cost:{label:"しゅっぴ", ic:"💸", tag:"#FF6858"},
+  event:{label:"できごと", ic:"🎴", tag:"#FFC04B"},
+  learn:{label:"まなび", ic:"📚", tag:"#00A3BD"},
+  choice:{label:"トビラ", ic:"🚪", tag:"#4A3A30"},
+  heavy:{label:"できごと", ic:"⚠️", tag:"#4A3A30"},
+  fam:{label:"家庭カード", ic:"🏠", tag:"#00A3BD"},
+};
+
+/* 家庭カード(5種) hide: shien=支援・奨学金 / chiiki=支え合い / career=しごと / global=海外 */
+const FAMILIES = [
+  {id:"w1", name:"欧米に生まれた家庭", region:"欧米", rural:false, money:150, allow:10, wage:20,
+   hide:["chiiki"], perk:"eigo",
+   story:"学校に行くのは「当たり前」。図書館もネットも、ぜんぶそろっている。ただ、となりの家の人の名前は、じつは知らない。",
+   perkText:"英語ネイティブ：海外・留学系のトビラの ★のカギが2つ軽くなる"},
+  {id:"w2", name:"日本に生まれた家庭", region:"日本", rural:false, money:120, allow:5, wage:20,
+   hide:["chiiki","shien"], perk:"kinben",
+   story:"教科書は無料で、学校には給食もある。塾にも通わせてもらった。「支援」や「奨学金」は、自分には関係ない言葉だと思っていた。",
+   perkText:"コツコツ力：はじめから まなび+1／独学の効果が上がる"},
+  {id:"w3", name:"ウガンダの、両親がそろっている家庭", region:"ウガンダ", rural:true, money:40, allow:0, wage:10,
+   hide:["shien","career","global"], perk:"tasukeai",
+   story:"朝は水くみと畑を手伝ってから、歩いて学校へ。学費を払う月はたいへんだ。でも困ったときは、村のみんなが助けてくれる。",
+   perkText:"支え合い：情報が手に入るできごとの効果が2倍"},
+  {id:"w4", name:"外交官としてウガンダに駐在する家庭", region:"ウガンダ（駐在）", rural:false, money:150, allow:10, wage:20,
+   hide:["chiiki"], perk:"kokusai",
+   story:"インターナショナルスクールに通い、長期休みには帰国する。車の窓から見える市場の暮らしを、じつはまだ、よく知らない。",
+   perkText:"国際感覚：はじめから まなび+1／海外・留学系トビラのおかねのカギ −50万"},
+  {id:"w5", name:"ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
+   hide:["career","global"], perk:"shienPro",
+   story:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。そのとき出会った遺児支援の団体で、「支えてくれる仕組みと人」を誰よりも早く知った。",
+   perkText:"支援を知っている：奨学金・支援の選択肢がすべて見えている／はじめて使うと まなび+1"},
+];
+
+/* 盤面 36マス */
+const SQUARES = [
+  {t:"start", name:"スタート"},
+  {t:"income", name:"初めてのかせぎ", fixed:15},
+  {t:"event"},
+  {t:"learn"},
+  {t:"choice", name:"進学", key:"shinro", stop:true},
+  {t:"income", name:"おしごと"},
+  {t:"event"},
+  {t:"cost", name:"学用品・制服代", amt:20},
+  {t:"learn"},
+  {t:"choice", name:"くらし", key:"kurashi"},
+  {t:"income", name:"おしごと"},
+  {t:"choice", name:"まち", key:"machi"},
+  {t:"cost", name:"急な病気の医療費", amt:30},
+  {t:"choice", name:"技術", key:"ginou"},
+  {t:"income", name:"おしごと"},
+  {t:"learn"},
+  {t:"event"},
+  {t:"choice", name:"しごと", key:"shigoto"},
+  {t:"income", name:"おしごと"},
+  {t:"cost", name:"家族のための出費", amt:40},
+  {t:"event"},
+  {t:"choice", name:"留学", key:"kaigai"},
+  {t:"learn"},
+  {t:"income", name:"おしごと"},
+  {t:"choice", name:"学びなおし", key:"manabinaoshi"},
+  {t:"choice", name:"挑戦", key:"chousen"},
+  {t:"cost", name:"ライフイベント出費", amt:50},
+  {t:"income", name:"おしごと"},
+  {t:"event"},
+  {t:"choice", name:"大きな夢", key:"yume"},
+  {t:"learn"},
+  {t:"income", name:"おしごと"},
+  {t:"event"},
+  {t:"cost", name:"まとまった出費", amt:60},
+  {t:"income", name:"おしごと"},
+  {t:"goal", name:"ゴール"},
+];
+
+/* トビラ定義 tag: shien/chiiki/career/global は家庭カードによって？？？になる */
+function choiceDef(key, p){
+  switch(key){
+    case "shinro": return {
+      title:"進学のトビラ", body:"学校を卒業。ここから先の道を選ぼう。",
+      opts:[
+        {t:"上の学校へ進学する（自費）", d:"学費を家のお金で払ってまなぶ。世界がひろがる", req:{money:200}, fx:{money:-200, learn:3, happy:1}},
+        {t:"奨学金・支援団体の力で進学する", d:"「返さなくていい奨学金」を知っていることがチカラになる", tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}},
+        {t:"働いて家族を支える", d:"畑や店で働き、現場で経験を積む", req:{}, fx:{money:80, learn:1}},
+      ]};
+    case "kurashi":
+      if(p.fam.rural) return {
+        title:"くらしのトビラ", body:"毎日の水くみと、暗くなったら終わる勉強。くらしを変える？",
+        opts:[
+          {t:"雨水タンクとソーラーランプを入れる", d:"水くみの時間が、勉強の時間に変わる", req:{money:50}, fx:{money:-50, learn:1, happy:2}},
+          {t:"いままでどおりの暮らしを続ける", d:"お金はかからない。そのぶん時間はかかる", req:{}, fx:{money:20}},
+        ]};
+      return {
+        title:"くらしのトビラ", body:"そろそろ自分の暮らしを考えたい。",
+        opts:[
+          {t:"ひとり暮らしを始める", d:"自由と責任。自分の生活をつくる", req:{money:100}, fx:{money:-100, learn:1, happy:2}},
+          {t:"実家でしっかり貯金", d:"堅実もりっぱな選択", req:{}, fx:{money:50}},
+        ]};
+    case "machi":
+      if(p.fam.rural) return {
+        title:"まちのトビラ", body:"村を出るか、残るか。人生の分かれ道。",
+        opts:[
+          {t:"首都カンパラに出る", d:"生活費は上がる。でも、見える世界が変わる", req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll"},
+          {t:"村で暮らしつづける", d:"顔見知りと、慣れた畑。生活費は安い", req:{}, fx:{money:20, happy:1}},
+        ]};
+      return {
+        title:"まちのトビラ", body:"進学・しごと・暮らし。どこで生きていく？",
+        opts:[
+          {t:"大都市に住みつづける", d:"情報も出会いも多い。そのぶん生活費が高い", req:{}, fx:{money:-30, happy:1}},
+          {t:"家賃の安い郊外へ", d:"浮いたお金は貯金にまわす", req:{}, fx:{money:30}},
+        ]};
+    case "ginou": return {
+      title:"技術のトビラ", body:"手に職があれば、しごとの幅がぐんと広がる。",
+      opts:[
+        {t:"職業訓練校で技術を学ぶ", d:"縫製・機械・IT。お金と時間を集中投資", tag:"career", req:{money:50, learn:3}, fx:{money:-50, learn:2, happy:1}},
+        {t:"見習いとして働きながら覚える", d:"先輩の手もとが教科書", req:{}, fx:{money:10, learn:1}},
+        {t:"今はやめておく", d:"タイミングも大事", req:{}, fx:{}},
+      ]};
+    case "shigoto": return {
+      title:"しごとのトビラ", body:"新しいしごとの募集を見つけた！",
+      opts:[
+        {t:"国際機関・NGOで働く", d:"まなびの蓄積が採用の決め手に", tag:"career", req:{learn:5}, fx:{learn:1, happy:2}},
+        {t:"給料の高いしごとに移る", d:"スキルを高く買ってもらう", req:{learn:4}, fx:{money:100}},
+        {t:"いまのしごとを続ける", d:"安定して働き、少し昇給した", req:{}, fx:{money:30}},
+      ]};
+    case "kaigai": return {
+      title:"留学のトビラ", body:"海の向こうで学んでみたい気持ちがふくらむ。",
+      opts:[
+        {t:"海外の大学に留学する", d:"言葉の壁をこえた先に、新しい世界", tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}},
+        {t:"外国で働いてみる", d:"仕送りで、遠くの家族も支えられる", req:{learn:3}, fx:{money:80, happy:1}},
+        {t:"自分の国で暮らしつづける", d:"ここにも、いい暮らしはある", req:{}, fx:{happy:1}},
+      ]};
+    case "manabinaoshi": return {
+      title:"学びなおしのトビラ", body:"大人になってからでも、学びの扉は開けなおせる。",
+      opts:[
+        {t:"夜間学校・オンライン講座で学びなおす", d:"一度閉じた扉も、もう一度開けられる", tag:"shien", req:{money:80, learn:2}, fx:{money:-80, learn:3, happy:1}},
+        {t:"今の道をきわめる", d:"続ける力も立派なキャリア", req:{}, fx:{money:20}},
+      ]};
+    case "chousen": return {
+      title:"挑戦のトビラ", body:"やってみたいことがある。動くなら今かも。",
+      opts:[
+        {t:"起業する", d:"たくわえとまなびを全部つぎこんで勝負", req:{money:250, learn:6}, fx:{money:-250, learn:2, happy:3}},
+        {t:"地域の子どもたちに勉強を教える", d:"もらった支えを、次の世代へ手わたす", tag:"chiiki", req:{learn:3}, fx:{learn:1, happy:2}},
+        {t:"今の道をきわめる", d:"続けることも立派な挑戦", req:{}, fx:{money:20}},
+      ]};
+    case "yume": return {
+      title:"大きな夢のトビラ", body:"人生でいちばんやりたかったこと、覚えてる？",
+      opts:[
+        {t:"世界一周の旅に出る", d:"ずっと夢だったあの計画を実行", req:{money:200}, fx:{money:-200, happy:4}},
+        {t:"故郷に図書館をつくる仲間に加わる", d:"じぶんの夢が、みんなの夢になる", tag:"chiiki", req:{money:50, learn:4}, fx:{money:-50, happy:4}},
+        {t:"大切な人との時間に投資", d:"いちばん近くにある、しあわせ", req:{money:100}, fx:{money:-100, happy:3}},
+        {t:"星空の下で、家族と夢を語り合う", d:"お金はなくても、夢は語れる", req:{}, fx:{happy:1}},
+      ]};
+    case "learnSq": return {
+      title:"まなびのトビラ", body:"自分に投資するチャンス。どうする？",
+      opts:[
+        {t:"学校や講座にお金を払って学ぶ", d:"お金をかけたぶん、ぐんと伸びる", tag:"manabi", req:{money:30}, fx:{money:-30, learn:2}},
+        {t:"ラジオ・本・友だちから学ぶ", d:"ゼロ円でもちゃんと前に進める", req:{}, fx:{learn: p.perk==="kinben" ? 2 : 1}},
+      ]};
+  }
+}
+
+/* できごとカード only: rural=ウガンダの村ぐらし / rich=先進国・駐在ぐらし */
+const EVENTS = [
+  {t:"手伝いが評価されて臨時収入", d:"はたらく力は、どこの国でも役に立つ", fx:{money:30}},
+  {t:"中古のスマホを手に入れた", d:"世界とつながる小さな窓ができた", fx:{learn:1, happy:1}},
+  {t:"遠くの親戚が送金してくれた", d:"家族の助け合いは、国境をこえる", fx:{money:30}},
+  {t:"「外国でかんたんに稼げる」という話を断った", d:"うますぎる話にはウラがある。えらい！", fx:{learn:1}},
+  {t:"熱を出して寝こんだ", d:"薬代と、休んだぶんの出費", fx:{money:-10}},
+  {only:"rural", t:"市場の手伝いで小づかいをかせいだ", d:"商売のコツが、少し身についた", fx:{money:20}},
+  {only:"rural", t:"雨季の大雨で、通学路が川になった", d:"学校まで歩けない日もある", fx:{money:-10}},
+  {only:"rural", t:"ラジオの教育番組に夢中になった", d:"電気が少なくても、学びは届く", fx:{learn:1}},
+  {only:"rural", t:"マラリアにかかってしまった", d:"薬代と、休んだあいだの出費", fx:{money:-20}},
+  {only:"rural", t:"村の収穫祭でごちそうを囲んだ", d:"分け合うと、しあわせはふえる", fx:{money:-10, happy:2}},
+  {only:"rural", t:"作物が高く売れた", d:"がんばった畑が実を結んだ", fx:{money:30}},
+  {only:"rural", t:"毎日歩く通学路で、靴がこわれた", d:"長い道のりは、モノも消耗させる", fx:{money:-10}},
+  {only:"rural", t:"教科書を友だちと貸し借りした", d:"1冊の本も、分ければ2人分", fx:{learn:1, happy:1}},
+  {only:"rich", t:"習いごとの発表会があった", d:"月謝は高いけど、いい経験になった", fx:{money:-15, happy:2}},
+  {only:"rich", t:"家族で旅行に出かけた", d:"楽しかったけど、けっこうな出費", fx:{money:-25, happy:2}},
+  {only:"rich", t:"サブスク、入りすぎでは？", d:"固定費の見直しは節約の第一歩", fx:{money:-15}},
+  {kind:"info", reveal:"any", t:"外国から来た人と、じっくり話しこんだ", d:"知らなかった世界の入口が、少し見えた"},
+  {kind:"info", reveal:"shien", t:"「返さなくていい奨学金で大学に行けた」という話を聞いた", d:"世界には、そういう仕組みをつくっている人たちがいる"},
+  {kind:"info", reveal:"chiiki", t:"近所の家の夕食に招かれた", d:"「困ったときはお互いさま」。そういう世界が、すぐそばにあった"},
+  {kind:"fair", t:"NGOの進学説明会が、となりの町まで来た", d:"バス代はかかるけど、行けば情報が手に入る"},
+];
+
+/* ===================== state ===================== */
+let players = [];
+let turn = 0;
+let deck = [];
+let busy = false;
+let heavyOn = false;
+
+const $ = (id)=>document.getElementById(id);
+const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* ===================== setup ===================== */
+function makeInputRow(i, name){
+  const row = document.createElement("div");
+  row.className = "p-row";
+  row.innerHTML = `<span class="p-dot" style="background:${PCOLORS[i]}"></span>
+    <input maxlength="8" placeholder="プレイヤー${i+1}" value="${name||""}">
+    <button class="rm" aria-label="削除">✕</button>`;
+  row.querySelector(".rm").onclick = ()=>{
+    if($("playerInputs").children.length > 2){ row.remove(); refreshDots(); }
+  };
+  return row;
+}
+function refreshDots(){
+  [...$("playerInputs").children].forEach((r,i)=>{
+    r.querySelector(".p-dot").style.background = PCOLORS[i];
+    r.querySelector("input").placeholder = `プレイヤー${i+1}`;
+  });
+}
+function initSetup(){
+  const box = $("playerInputs");
+  box.innerHTML = "";
+  for(let i=0;i<3;i++) box.appendChild(makeInputRow(i));
+}
+$("addPlayer").onclick = ()=>{
+  const box = $("playerInputs");
+  if(box.children.length < 6) box.appendChild(makeInputRow(box.children.length));
+};
+$("startBtn").onclick = ()=>{
+  heavyOn = $("heavyToggle").checked;
+  const rows = [...$("playerInputs").children];
+  const famDeck = shuffle([...FAMILIES]);
+  players = rows.map((r,i)=>{
+    const nm = r.querySelector("input").value.trim() || `プレイヤー${i+1}`;
+    const fam = famDeck[i % famDeck.length];
+    return {
+      name:nm, color:PCOLORS[i], fam,
+      region:fam.region, perk:fam.perk,
+      pos:0, money:fam.money, initMoney:fam.money,
+      allow:fam.allow, learn:1 + ((fam.perk==="kinben"||fam.perk==="kokusai")?1:0), happy:0,
+      hidden:new Set(fam.hide),
+      open:0, locked:0, unseen:0, doorLog:[],
+      shienDiscount:false, shienUsed:false,
+      hadHeavy:false, disasterTurns:0, letterIn:null,
+      done:false, rankAt:null,
+    };
+  });
+  turn = 0; busy = true; deck = [];
+  showScreen("game");
+  renderBoard(); renderStrip(); renderTokens(); updateTurnUI();
+  revealFamilyCard(0);
+};
+$("againBtn").onclick = ()=>{ showScreen("setup"); initSetup(); };
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+/* ---------- 家庭カードの非公開ドラフト ---------- */
+function revealFamilyCard(i){
+  if(i >= players.length){ closeModal(); beginTurn(); return; }
+  const p = players[i];
+  openModal(`
+    <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 家庭カード</span>
+    <h2>${p.name} さんだけ、見てください</h2>
+    <p class="m-body">ほかの人には見せずに、そっとめくってね。<br>あなたのスタート地点が書いてあります。</p>
+    <button class="m-btn" id="mFlip">カードをめくる</button>`);
+  $("mFlip").onclick = ()=>{
+    const hiddenN = p.hidden.size;
+    openModal(`
+      <span class="m-tag" style="background:${TYPE_META.fam.tag}">🏠 ${p.name} さんの家庭カード</span>
+      <div class="fam-card">
+        <div class="f-name">${p.fam.name}</div>
+        <div class="f-story">${p.fam.story}</div>
+        <div class="f-stats">
+          <span>💰 はじめのおかね：<b>${p.money}万</b></span>
+          <span>💼 おしごとの基本給：<b>${p.fam.wage}万</b></span>
+          <span>📮 仕送り：<b>${p.allow>0 ? "毎回のかせぎ +"+p.allow+"万" : "なし"}</b></span>
+          <span>🌍 生まれた場所：<b>${p.region}</b></span>
+          <span>👁 まだ見えていない選択肢：<b>${hiddenN}個</b>${hiddenN>0?"（そのマスでは「？？？」と表示されます）":""}</span>
+          <span>✨ とくい：<b>${p.fam.perkText}</b></span>
+        </div>
+      </div>
+      <button class="m-btn" id="mNext">OK、覚えた${i < players.length-1 ? "（次の人へ）" : "（ゲームスタート！）"}</button>`);
+    $("mNext").onclick = ()=>revealFamilyCard(i+1);
+  };
+}
+
+/* ===================== board ===================== */
+function gridPos(i){
+  const row = Math.floor(i/6);
+  const col = (row % 2 === 0) ? (i % 6) : (5 - (i % 6));
+  return {row, col};
+}
+function renderBoard(){
+  const b = $("board");
+  b.innerHTML = "";
+  SQUARES.forEach((sq,i)=>{
+    const m = TYPE_META[sq.t];
+    const el = document.createElement("div");
+    el.className = `sq t-${sq.t}`;
+    el.id = `sq-${i}`;
+    const {row,col} = gridPos(i);
+    el.style.gridRow = row+1; el.style.gridColumn = col+1;
+    el.innerHTML = `<span class="num">${i}</span><span class="ic">${m.ic}</span><span>${sq.name || m.label}</span><div class="tokens"></div>`;
+    b.appendChild(el);
+  });
+}
+function renderTokens(){
+  document.querySelectorAll(".sq .tokens").forEach(t=>t.innerHTML="");
+  players.forEach((p,idx)=>{
+    const holder = document.querySelector(`#sq-${p.pos} .tokens`);
+    if(!holder) return;
+    const tk = document.createElement("span");
+    tk.className = "tok"; tk.id = `tok-${idx}`;
+    tk.style.background = p.color;
+    holder.appendChild(tk);
+  });
+}
+function renderStrip(){
+  const s = $("playersStrip");
+  s.innerHTML = "";
+  players.forEach((p,i)=>{
+    const c = document.createElement("div");
+    c.className = "pcard" + (i===turn?" now":"") + (p.done?" done":"");
+    c.id = `pcard-${i}`;
+    c.innerHTML = `
+      <div class="nm"><span class="p-dot" style="background:${p.color}"></span>${p.name}${p.done?" 🏁":""}</div>
+      <div class="stat"><span>おかね</span><b class="${p.money<0?"neg":""}">${p.money}万</b></div>
+      <div class="stat"><span>まなび</span><b>${"★".repeat(Math.min(p.learn,8))}${p.learn>8?"+":""}</b></div>
+      <div class="stat"><span>ハッピー</span><b>♥${p.happy}</b></div>`;
+    s.appendChild(c);
+  });
+}
+function updateTurnUI(){
+  const p = players[turn];
+  $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${p.name} さんの番`;
+  renderStrip();
+  const card = $(`pcard-${turn}`);
+  if(card) card.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+}
+
+/* ===================== turn flow ===================== */
+function beginTurn(){
+  updateTurnUI();
+  const p = players[turn];
+  if(p.letterIn !== null){
+    p.letterIn--;
+    if(p.letterIn <= 0){
+      p.letterIn = null;
+      busy = true; $("diceBtn").disabled = true;
+      showLetterModal(turn);
+      return;
+    }
+  }
+  busy = false;
+  $("diceBtn").disabled = false;
+  $("diceFace").textContent = "?";
+}
+
+$("diceBtn").onclick = async ()=>{
+  if(busy) return;
+  busy = true;
+  $("diceBtn").disabled = true;
+  const n = await spinDice();
+  await movePlayer(turn, n);
+};
+
+function spinDice(){
+  return new Promise(res=>{
+    const face = $("diceFace");
+    let count = 0;
+    const iv = setInterval(()=>{
+      face.textContent = 1 + Math.floor(Math.random()*6);
+      if(++count > 9){
+        clearInterval(iv);
+        const n = 1 + Math.floor(Math.random()*6);
+        face.textContent = n;
+        setTimeout(()=>res(n), 350);
+      }
+    }, 80);
+  });
+}
+
+async function movePlayer(idx, steps){
+  const p = players[idx];
+  let target = Math.min(p.pos + steps, SQUARES.length-1);
+  for(let i=p.pos+1; i<target; i++){
+    if(SQUARES[i].stop){ target = i; break; }
+  }
+  while(p.pos < target){
+    p.pos++;
+    renderTokens();
+    const tk = $(`tok-${idx}`);
+    if(tk) tk.classList.add("hop");
+    await wait(230);
+  }
+  await wait(150);
+  resolveSquare(idx);
+}
+
+/* ===================== square resolution ===================== */
+function resolveSquare(idx){
+  const p = players[idx];
+  const sq = SQUARES[p.pos];
+  if(sq.t === "income"){
+    let amt, note;
+    if(sq.fixed != null){
+      amt = sq.fixed;
+      note = "はじめての、自分のかせぎ！";
+    } else {
+      amt = p.fam.wage + p.learn*10 + p.allow;
+      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×10万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b>`;
+      if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——`;
+      if(p.disasterTurns > 0){ amt -= 10; note += `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`; }
+    }
+    showInfoModal("income", sq.name || "おしごと", note, {money:amt}, idx);
+  }
+  else if(sq.t === "cost"){
+    showInfoModal("cost", sq.name, "生きているとお金はかかる。固定費、だいじ。", {money:-sq.amt}, idx);
+  }
+  else if(sq.t === "event"){
+    if(heavyOn && !p.hadHeavy && p.pos >= 8 && Math.random() < 0.3){
+      triggerHeavy(idx); return;
+    }
+    drawEvent(idx);
+  }
+  else if(sq.t === "learn"){
+    showChoiceModal(idx, choiceDef("learnSq", p), "learn");
+  }
+  else if(sq.t === "choice"){
+    showChoiceModal(idx, choiceDef(sq.key, p), "choice");
+  }
+  else if(sq.t === "goal"){
+    p.done = true;
+    p.rankAt = players.filter(x=>x.done).length;
+    showGoalModal(idx);
+  }
+  else endTurn();
+}
+
+/* ---------- できごと ---------- */
+function drawEvent(idx){
+  const p = players[idx];
+  let ev = null, guard = 0;
+  while(guard++ < 40){
+    if(deck.length === 0) deck = shuffle([...EVENTS]);
+    const cand = deck.pop();
+    if(cand.only === "rural" && !p.fam.rural) continue;
+    if(cand.only === "rich" && p.fam.rural) continue;
+    if((cand.kind === "info" || cand.kind === "fair") && p.hidden.size === 0) continue;
+    ev = cand; break;
+  }
+  if(!ev){ endTurn(); return; }
+
+  if(ev.kind === "info"){
+    const n = p.perk === "tasukeai" ? 2 : 1;
+    const revealed = revealTags(p, ev.reveal, n);
+    showInfoModal("event", ev.t, ev.d, {}, idx,
+      revealed > 0 ? `👁 見えていなかった選択肢が <b>${revealed}個</b>、見えるようになった！` : null);
+  }
+  else if(ev.kind === "fair"){
+    showChoiceModal(idx, {
+      title:"NGOの進学説明会が、となりの町まで来た",
+      body:"バス代はかかるけど、行けば情報が手に入る。",
+      opts:[
+        {t:"バスを乗りついで行ってみる", d:"パンフレットと、話を聞ける大人がそこにいる", req:{money:5}, fx:{money:-5}, special:"reveal2"},
+        {t:"今回は見送る", d:"バス代も、ばかにならないから", req:{}, fx:{}},
+      ]
+    }, "event");
+  }
+  else {
+    showInfoModal("event", ev.t, ev.d, {...ev.fx}, idx);
+  }
+}
+/* target: "any"=優先順で / それ以外=そのタグを最優先で */
+function revealTags(p, target, n){
+  const order = ["shien","chiiki","career","global"];
+  let count = 0;
+  if(target !== "any" && p.hidden.has(target)){ p.hidden.delete(target); count++; n--; }
+  for(const t of order){
+    if(n <= 0) break;
+    if(p.hidden.has(t)){ p.hidden.delete(t); count++; n--; }
+  }
+  return count;
+}
+
+/* ---------- 重いライフイベント ---------- */
+function triggerHeavy(idx){
+  const p = players[idx];
+  const canDeath = p.allow > 0;
+  const type = canDeath && Math.random() < 0.6 ? "death" : "disaster";
+  p.hadHeavy = true;
+
+  if(type === "death"){
+    p.allow = 0;
+    showChoiceModal(idx, {
+      heavy:true,
+      title:"家族が、病気で亡くなった。",
+      body:"しばらくして、暮らしの計算が変わっていることに気づく。<br><b>【この先ずっと：仕送りがなくなる】</b>",
+      opts:[
+        {t:"遺児を支える団体・奨学金について調べる", d:"世界には、親を亡くした子を支える仕組みがある", req:{}, fx:{learn:1}, special:"shienSupport"},
+        {t:"今は、何も考えられない", d:"それでいい。時間が必要なときもある", req:{}, fx:{}, special:"letter"},
+      ]
+    }, "heavy");
+  } else if(p.fam.rural){
+    p.disasterTurns = 3;
+    showChoiceModal(idx, {
+      heavy:true,
+      title:"雨が、何か月も降らない。",
+      body:"干ばつで、畑の作物が枯れていく。井戸の水も減ってきた。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+      opts:[
+        {t:"支援団体の食料・種の支援を調べる", d:"こういうときのための仕組みがある", req:{}, fx:{money:30, learn:1}},
+        {t:"たくわえでしのぐ", d:"備えがあれば、乗りこえられる", req:{money:30}, fx:{money:-30}},
+      ]
+    }, "heavy");
+  } else {
+    p.disasterTurns = 3;
+    showChoiceModal(idx, {
+      heavy:true,
+      title:"深夜、大きな地震があった。",
+      body:"家族は無事だった。ただ、家と、親の職場は無事ではなかった。<br><b>【3ターンのあいだ：かせぎ −10万】</b>",
+      opts:[
+        {t:"災害支援制度・義援金について調べる", d:"こういうときのための仕組みがある", req:{}, fx:{money:30, learn:1}},
+        {t:"貯金でしのぐ", d:"備えがあれば、乗りこえられる", req:{money:30}, fx:{money:-30}},
+      ]
+    }, "heavy");
+  }
+}
+function showLetterModal(idx){
+  const p = players[idx];
+  showChoiceModal(idx, {
+    heavy:true,
+    title:"遺児支援団体の人が、家をたずねてきた。",
+    body:"親を亡くした子どもを支える団体が、世界にはあるという。<br>誰かが、ちゃんと気にかけてくれている。",
+    opts:[
+      {t:"思いきって、話を聞いてみる", d:"支えてくれる仕組みと人は、ちゃんとある", req:{}, fx:{learn:1}, special:"shienSupport"},
+      {t:"まだ、話せない", d:"もらった連絡先は、大切にとっておこう", req:{}, fx:{}, special:"letter"},
+    ]
+  }, "heavy", true);
+}
+
+/* ---------- modals ---------- */
+function fxChips(fx){
+  const parts = [];
+  if(fx.money) parts.push(`<span class="fx" style="color:${fx.money>0?"#5a9114":"#d24a3c"}">${fx.money>0?"+":""}${fx.money}万</span>`);
+  if(fx.learn) parts.push(`<span class="fx" style="color:#00A3BD">まなび +${fx.learn}</span>`);
+  if(fx.happy) parts.push(`<span class="fx" style="color:#F291B5">♥ +${fx.happy}</span>`);
+  if(!parts.length) parts.push(`<span class="fx">変化なし</span>`);
+  return `<div class="fx-line">${parts.join("")}</div>`;
+}
+function applyFx(p, fx){
+  p.money += fx.money||0;
+  p.learn += fx.learn||0;
+  p.happy += fx.happy||0;
+}
+function openModal(html){
+  $("modalBox").innerHTML = html;
+  $("overlay").classList.add("open");
+  $("modalBox").scrollTop = 0;
+}
+function closeModal(){ $("overlay").classList.remove("open"); }
+
+function showInfoModal(type, title, body, fx, idx, note){
+  const m = TYPE_META[type];
+  openModal(`
+    <span class="m-tag" style="background:${m.tag}">${m.ic} ${m.label}</span>
+    <h2>${title}</h2>
+    <p class="m-body">${body}</p>
+    ${note ? `<div class="m-note">${note}</div>` : ""}
+    ${fxChips(fx)}
+    <button class="m-btn" id="mOk">OK</button>`);
+  $("mOk").onclick = ()=>{
+    applyFx(players[idx], fx);
+    closeModal(); endTurn();
+  };
+}
+
+function effectiveMoneyReq(p, o){
+  let m = o.req.money || 0;
+  if(p.shienDiscount && (o.tag === "shien" || o.tag === "manabi")) m = Math.max(0, m - 50);
+  if(p.perk === "kokusai" && o.tag === "global") m = Math.max(0, m - 50);
+  return m;
+}
+function effectiveLearnReq(p, o){
+  let l = o.req.learn || 0;
+  if(p.perk === "eigo" && o.tag === "global") l = Math.max(0, l - 2);
+  return l;
+}
+function reqLabel(p, o){
+  const parts = [];
+  const em = effectiveMoneyReq(p, o);
+  const el = effectiveLearnReq(p, o);
+  if(o.req.money){
+    const memo = [];
+    if(p.shienDiscount && (o.tag === "shien" || o.tag === "manabi")) memo.push("🎗支援サポートで−50万");
+    if(p.perk === "kokusai" && o.tag === "global") memo.push("🌏国際感覚で−50万");
+    parts.push(`おかね ${em}万` + (memo.length ? `（${memo.join("・")}）` : ""));
+  }
+  if(o.req.learn){
+    parts.push(`まなび ★${el}` + (el < o.req.learn ? "（🗣英語ネイティブで−2）" : ""));
+  }
+  return parts.join(" ＋ ");
+}
+function meetsReq(p, o){
+  if(effectiveMoneyReq(p, o) > p.money) return false;
+  if(effectiveLearnReq(p, o) > p.learn) return false;
+  return true;
+}
+
+function showChoiceModal(idx, def, type, skipCount){
+  const p = players[idx];
+  const m = TYPE_META[type === "learn" ? "learn" : (type === "heavy" ? "heavy" : (type === "event" ? "event" : "choice"))];
+  const states = def.opts.map(o=>{
+    if(o.tag && p.hidden.has(o.tag)) return "unseen";
+    return meetsReq(p, o) ? "open" : "locked";
+  });
+  const logEntry = {title:def.title, opts:def.opts, states, chosen:null};
+  if(!skipCount){
+    states.forEach(s=>{
+      if(s === "unseen") p.unseen++;
+      else if(s === "open") p.open++;
+      else p.locked++;
+    });
+    p.doorLog.push(logEntry);
+  }
+  const doors = def.opts.map((o,i)=>{
+    const st = states[i];
+    if(st === "unseen"){
+      return `<button class="door unseen" disabled>
+        <span class="d-icon">❓</span>
+        <span class="d-main">
+          <span class="d-title">？？？</span>
+          <span class="d-desc">この選択肢は、まだ見えていない。</span>
+        </span>
+      </button>`;
+    }
+    const key = reqLabel(p, o);
+    const ok = st === "open";
+    return `<button class="door" data-i="${i}" ${ok?"":"disabled"}>
+      <span class="d-icon">${ok?"🚪":"🔒"}</span>
+      <span class="d-main">
+        <span class="d-title">${o.t}</span>
+        <span class="d-desc">${o.d}</span>
+        ${key?`<span class="d-key">カギ：${key}${ok?"":"（たりない…）"}</span>`:""}
+      </span>
+    </button>`;
+  }).join("");
+  openModal(`
+    <span class="m-tag" style="background:${m.tag}">${m.ic} ${def.heavy ? "できごと" : m.label}</span>
+    <h2>${def.title}</h2>
+    <p class="m-body">${def.body}<br><b>${p.name}</b> さん：おかね ${p.money}万 ／ まなび ★${p.learn}</p>
+    <div class="door-list">${doors}</div>`);
+  document.querySelectorAll("#modalBox .door:not(:disabled)").forEach(btn=>{
+    btn.onclick = ()=>{
+      logEntry.chosen = +btn.dataset.i;
+      const o = def.opts[+btn.dataset.i];
+      const fx = {...o.fx};
+      const notes = [];
+      if(o.special === "revealAll" && p.hidden.size > 0){
+        p.hidden.clear();
+        notes.push("👁 いままで見えていなかった選択肢が、ぜんぶ見えるようになった！");
+      }
+      if(o.special === "reveal2"){
+        const n = revealTags(p, "any", p.perk === "tasukeai" ? 4 : 2);
+        if(n > 0) notes.push(`👁 見えていなかった選択肢が <b>${n}個</b>、見えるようになった！`);
+      }
+      if(o.special === "shienSupport"){
+        p.shienDiscount = true;
+        p.hidden.delete("shien");
+        notes.push("🎗 これから先、支援・まなび系のトビラのカギが <b>−50万</b> になる。");
+      }
+      if(o.special === "letter"){
+        p.letterIn = 2;
+      }
+      if(o.tag === "shien" && p.perk === "shienPro" && !p.shienUsed){
+        p.shienUsed = true;
+        fx.learn = (fx.learn||0) + 1;
+        notes.push("✨ 支援を知っている強みで まなび+1");
+      }
+      openModal(`
+        <span class="m-tag" style="background:${m.tag}">${m.ic} えらんだ！</span>
+        <h2>${o.t}</h2>
+        <p class="m-body">${o.d}。</p>
+        ${notes.length ? `<div class="m-note">${notes.join("<br>")}</div>` : ""}
+        ${fxChips(fx)}
+        <button class="m-btn" id="mOk">OK</button>`);
+      $("mOk").onclick = ()=>{ applyFx(p, fx); closeModal(); endTurn(); };
+    };
+  });
+}
+
+function showGoalModal(idx){
+  const p = players[idx];
+  openModal(`
+    <span class="m-tag" style="background:#4A3A30">🏁 ゴール</span>
+    <h2>${p.name} さん、ゴール！</h2>
+    <p class="m-body">${p.rankAt}番目のゴールです。おつかれさま！<br>全員がゴールしたら、けっか発表へ。</p>
+    ${fxChips({happy: p.rankAt===1?1:0})}
+    <button class="m-btn" id="mOk">OK</button>`);
+  $("mOk").onclick = ()=>{
+    if(p.rankAt === 1) p.happy += 1;
+    closeModal(); endTurn();
+  };
+}
+
+/* ---------- end of turn ---------- */
+function endTurn(){
+  const cur = players[turn];
+  if(cur.disasterTurns > 0) cur.disasterTurns--;
+  renderStrip(); renderTokens();
+  if(players.every(x=>x.done)){ showResult(); return; }
+  do { turn = (turn+1) % players.length; } while(players[turn].done);
+  beginTurn();
+}
+
+/* ===================== result ===================== */
+function showResult(){
+  showScreen("result");
+  const sorted = [...players].sort((a,b)=> b.happy - a.happy || b.money - a.money);
+  const list = $("resultList");
+  list.innerHTML = "";
+  sorted.forEach((p,i)=>{
+    const total = p.open + p.locked + p.unseen;
+    const pct = (n)=> total ? Math.round(n/total*100) : 0;
+    const diff = p.money - p.initMoney;
+    const card = document.createElement("div");
+    card.className = "res-card";
+    card.innerHTML = `
+      <span class="rank">${i+1}位</span>
+      <div class="r-name"><span class="p-dot" style="background:${p.color}"></span>${p.name}
+        <span class="r-fam">🏠 ${p.fam.name}</span></div>
+      <div class="r-story">${p.fam.story}</div>
+      <div class="r-stats">
+        <span class="fx" style="color:#F291B5">♥ ${p.happy}</span>
+        <span class="fx">残金 ${p.money}万（スタート比 ${diff>=0?"+":""}${diff}万）</span>
+        <span class="fx" style="color:#00A3BD">まなび ★${p.learn}</span>
+      </div>
+      <div class="doorbar">
+        <div class="seg-open" style="width:${pct(p.open)}%"></div>
+        <div class="seg-lock" style="width:${pct(p.locked)}%"></div>
+        <div class="seg-unseen" style="width:${pct(p.unseen)}%"></div>
+      </div>
+      <div class="doorbar-label">出会ったトビラ ${total}枚 ── 🚪 開けられた <b>${p.open}</b>／🔒 カギが足りなかった <b>${p.locked}</b>／👁 見えていなかった <b>${p.unseen}</b></div>
+      <button class="chip-btn rv-btn" data-p="${players.indexOf(p)}">🚪 トビラのネタバラシを見る</button>`;
+    list.appendChild(card);
+  });
+  list.querySelectorAll(".rv-btn").forEach(b=>{
+    b.onclick = ()=>showRevealModal(+b.dataset.p);
+  });
+
+  const totalUnseen = players.reduce((s,p)=>s+p.unseen, 0);
+  $("insightBox").innerHTML = `
+    <b>■ ふりかえりタイム</b><br>
+    順位を決めたのは、お金の多さじゃなくて <b>♥ハッピー</b>。<br>
+    でも、♥を生むトビラのカギは、<b>生まれた場所</b>によってぜんぜん違った。<br><br>
+    このテーブル全体で、<b>${totalUnseen}枚のトビラが「見えてすら いなかった」</b>。<br>
+    それはウガンダの家庭だけの話じゃない——<b>支え合いのトビラ</b>は、めぐまれた家庭からこそ見えなかったはず。<br>
+    カギが足りないのと、扉があることを知らないのは、ぜんぜん違う。<br><br>
+    🚪 それぞれのカードの<b>「ネタバラシ」ボタン</b>で、？？？の中身をのぞいてみよう。<br><br>
+    🗣 話してみよう：<br>
+    ・同じ「おしごとマス」なのに、基本給がちがった。それは本人の努力のちがいだろうか？<br>
+    ・あなたの家庭カードから見えなかったのは、どんなトビラだった？　逆に、見えていた強みは？<br>
+    ・親を亡くしたウガンダの子には、何が「見えて」いた？　それはなぜだろう？<br>
+    ・日本にいる私たちが、世界の遺児にわたせる「カギ」って、何だろう？`;
+}
+
+/* ===================== reveal（ネタバラシ） ===================== */
+function rawReqLabel(o){
+  const parts = [];
+  if(o.req.money) parts.push(`おかね${o.req.money}万`);
+  if(o.req.learn) parts.push(`★${o.req.learn}`);
+  return parts.join("＋");
+}
+function fxInline(fx){
+  const parts = [];
+  if(fx.money) parts.push(`💰${fx.money>0?"+":""}${fx.money}万`);
+  if(fx.learn) parts.push(`★+${fx.learn}`);
+  if(fx.happy) parts.push(`♥+${fx.happy}`);
+  return parts.join(" ");
+}
+const RV_META = {
+  chosen:["✅","えらんだ"], open:["🚪","開けられた"],
+  locked:["🔒","カギ不足"], unseen:["👁","見えてなかった！"],
+};
+function showRevealModal(pIdx){
+  const p = players[pIdx];
+  const secs = p.doorLog.map(e=>{
+    const rows = e.opts.map((o,i)=>{
+      const st = e.chosen === i ? "chosen" : e.states[i];
+      const [ic, label] = RV_META[st];
+      const key = rawReqLabel(o);
+      const fx = fxInline(o.fx);
+      return `<div class="rv-opt ${st}">
+        <span class="rv-ic">${ic}</span>
+        <span class="rv-main">
+          <span class="rv-t">${o.t}</span>
+          <span class="rv-d">${o.d}</span>
+          <span class="rv-meta">🔑 ${key || "カギなし"}${fx ? `　→ ${fx}` : ""}</span>
+        </span>
+        <span class="rv-st">${label}</span>
+      </div>`;
+    }).join("");
+    return `<div class="rv-door"><div class="rv-title">${e.title}</div>${rows}</div>`;
+  }).join("");
+  openModal(`
+    <div class="rule-page">
+      <button class="rule-close" id="rvClose" aria-label="とじる">✕</button>
+      <span class="m-tag" style="background:var(--brown)">🚪 ネタバラシ</span>
+      <h2>${p.name} さんが出会ったトビラ、ぜんぶ</h2>
+      <p class="m-body">👁は、ゲーム中「？？？」で中身が見えなかったトビラ。<br>ほんとうは、こんな選択肢だった——</p>
+      <div class="rv-list">${secs || "<p class='m-body'>トビラには出会わなかったみたい。</p>"}</div>
+      <button class="m-btn" id="rvOk">とじる</button>
+    </div>`);
+  $("rvClose").onclick = closeModal;
+  $("rvOk").onclick = closeModal;
+}
+
+/* ===================== rules ===================== */
+const RULE_PAGES = [
+  {tag:"🏁 めざすもの", title:"順位を決めるのは ♥ハッピー", items:[
+    ["🎲","サイコロを回してすごろくを進み、みんなでゴールをめざそう。"],
+    ["♥","最後の順位は、おかねの多さじゃなく <b>♥ハッピーの数</b>で決まる！"],
+    ["🚪","♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。"],
+  ]},
+  {tag:"🚪 トビラとカギ", title:"いい選択には「カギ」がいる", items:[
+    ["🚪","茶色い<b>トビラのマス</b>に止まると、人生の選択がやってくる。"],
+    ["🔑","選択肢には<b>カギ</b>（必要な💰おかね・★まなび）があるものも。"],
+    ["🔒","カギが足りないと、そのトビラは開けられない…！"],
+  ]},
+  {tag:"📚 まなびとおかね", title:"★まなびは、未来のカギ", items:[
+    ["📚","<b>まなびマス</b>やトビラ、🎴できごとで★まなびが貯まる。"],
+    ["💰","かせぎは「<b>基本給＋★×10万</b>」。基本給は、生まれた場所でちがう…！"],
+    ["🎴","<b>できごとマス</b>では、ラッキーもアクシデントも起こる。"],
+  ]},
+  {tag:"🏠 さいごに", title:"生まれる場所は、選べない", items:[
+    ["🏠","はじめに引く<b>家庭カード</b>で、生まれる国・持ちもの・基本給が変わる。"],
+    ["👁","とちゅうで「？？？」の選択肢に出会うかも。それが何なのかは——遊びおわってからのお楽しみ。"],
+    ["🗣","全員ゴールしたら<b>ふりかえりタイム</b>。感じたことを話してみよう。"],
+  ]},
+];
+function renderRules(page){
+  const pg = RULE_PAGES[page];
+  const items = pg.items.map(([ic,tx])=>
+    `<div class="rule-item"><span class="r-ic">${ic}</span><span>${tx}</span></div>`).join("");
+  const dots = RULE_PAGES.map((_,i)=>`<span class="${i===page?"on":""}"></span>`).join("");
+  const last = page === RULE_PAGES.length-1;
+  openModal(`
+    <div class="rule-page">
+      <button class="rule-close" id="ruleClose" aria-label="とじる">✕</button>
+      <span class="m-tag" style="background:var(--teal)">${pg.tag}</span>
+      <h2>${pg.title}</h2>
+      <div class="rule-list">${items}</div>
+      <div class="rule-dots">${dots}</div>
+      <div class="rule-nav">
+        ${page>0 ? '<button class="m-btn ghost" id="rulePrev">← まえ</button>' : ""}
+        ${last ? '<button class="m-btn" id="ruleDone">OK！</button>'
+               : '<button class="m-btn" id="ruleNext">つぎへ →</button>'}
+      </div>
+    </div>`);
+  $("ruleClose").onclick = closeModal;
+  if($("rulePrev")) $("rulePrev").onclick = ()=>renderRules(page-1);
+  if(last) $("ruleDone").onclick = closeModal;
+  else $("ruleNext").onclick = ()=>renderRules(page+1);
+}
+$("helpBtnSetup").onclick = ()=>renderRules(0);
+$("helpBtnGame").onclick = ()=>{
+  if(!$("overlay").classList.contains("open")) renderRules(0);
+};
+
+initSetup();
+</script>
+</body>
+</html>
