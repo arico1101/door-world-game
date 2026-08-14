@@ -515,7 +515,7 @@ function choiceDef(key, p){
       if(p.fam.rural) return {
         title:"まちのトビラ", variant:"ウガンダ育ち", body:"村を出るか、残るか。人生の分かれ道。",
         opts:[
-          {t:"首都カンパラに出る", d:"生活費は上がる。でも、見える世界が変わる", req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll"},
+          {t:"首都カンパラに出る", d:"生活費は上がる。でも、見える世界と、はたらける場が変わる", req:{money:60}, fx:{money:-60, learn:1, happy:1}, special:"revealAll", unlock:true},
           {t:"村で暮らしつづける", d:"顔見知りと、慣れた畑。生活費は安い", req:{}, fx:{money:20, happy:1}},
         ]};
       return {
@@ -527,22 +527,22 @@ function choiceDef(key, p){
     case "ginou": return {
       title:"技術のトビラ", body:"手に職があれば、しごとの幅がぐんと広がる。",
       opts:[
-        {t:"職業訓練校で技術を学ぶ", d:"縫製・機械・IT。お金と時間を集中投資", tag:"career", req:{money:50, learn:3}, fx:{money:-50, learn:2, happy:1}},
+        {t:"職業訓練校で技術を学ぶ", d:"縫製・機械・IT。お金と時間を集中投資", tag:"career", req:{money:50, learn:3}, fx:{money:-50, learn:2, happy:1}, unlock:true},
         {t:"見習いとして働きながら覚える", d:"先輩の手もとが教科書", req:{}, fx:{money:10, learn:1}},
         {t:"今はやめておく", d:"タイミングも大事", req:{}, fx:{}},
       ]};
     case "shigoto": return {
       title:"しごとのトビラ", body:"新しいしごとの募集を見つけた！",
       opts:[
-        {t:"国際機関・NGOで働く", d:"まなびの蓄積が採用の決め手に", tag:"career", req:{learn:5}, fx:{learn:1, happy:2}},
+        {t:"国際機関・NGOで働く", d:"まなびの蓄積が採用の決め手に", tag:"career", req:{learn:5}, fx:{learn:1, happy:2}, unlock:true},
         {t:"給料の高いしごとに移る", d:"スキルを高く買ってもらう", req:{learn:4}, fx:{money:100}},
         {t:"いまのしごとを続ける", d:"安定して働き、少し昇給した", req:{}, fx:{money:30}},
       ]};
     case "kaigai": return {
       title:"留学のトビラ", body:"海の向こうで学んでみたい気持ちがふくらむ。",
       opts:[
-        {t:"海外の大学に留学する", d:"言葉の壁をこえた先に、新しい世界", tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}},
-        {t:"外国で働いてみる", d:"仕送りで、遠くの家族も支えられる", req:{learn:3}, fx:{money:80, happy:1}},
+        {t:"海外の大学に留学する", d:"言葉の壁をこえた先に、新しい世界", tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}, unlock:true},
+        {t:"外国で働いてみる", d:"仕送りで、遠くの家族も支えられる", req:{learn:3}, fx:{money:80, happy:1}, unlock:true},
         {t:"自分の国で暮らしつづける", d:"ここにも、いい暮らしはある", req:{}, fx:{happy:1}},
       ]};
     case "manabinaoshi": return {
@@ -654,6 +654,7 @@ $("startBtn").onclick = ()=>{
       name:nm, color:PCOLORS[i], fam,
       region:fam.region, perk:fam.perk,
       pos:0, money:fam.money, initMoney:fam.money,
+      mult:fam.rural ? 5 : 10,
       allow:fam.allow, learn:1 + ((fam.perk==="kinben"||fam.perk==="kokusai")?1:0), happy:0,
       hidden:new Set(fam.hide),
       open:0, locked:0, unseen:0, doorLog:[], loan:0,
@@ -694,7 +695,7 @@ function revealFamilyCard(i){
         <div class="f-stats">
           <span>💰 はじめのおかね：<b>${p.money}万</b></span>
           <span>🍚 1日の生活費：<b>${p.fam.daily}</b>${p.fam.dailyNote ? "（"+p.fam.dailyNote+"）" : ""}</span>
-          <span>💼 おしごとの基本給：<b>${p.fam.wage}万</b></span>
+          <span>💼 おしごとの基本給：<b>${p.fam.wage}万</b>（＋まなび×<b>${p.fam.rural?5:10}万</b>）</span>
           <span>📮 仕送り：<b>${p.allow>0 ? "毎回のかせぎ +"+p.allow+"万" : "なし"}</b></span>
           <span>🌍 生まれた場所：<b>${p.region}</b></span>
           <span>👁 まだ見えていない選択肢：<b>${hiddenN}個</b>${hiddenN>0?"（そのマスでは「？？？」と表示されます）":""}</span>
@@ -860,11 +861,12 @@ function resolveSquare(idx){
       amt = sq.fixed;
       note = "はじめての、自分のかせぎ！";
     } else {
-      amt = p.fam.wage + p.learn*10 + p.allow;
+      amt = p.fam.wage + p.learn*p.mult + p.allow;
       const job = jobTitle(p);
       title = `${job.ic} ${AGES[p.pos]}歳・いまのしごと：${job.t}`;
-      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×10万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`;
+      note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×${p.mult}万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`;
       if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——`;
+      if(p.mult < 10) note += `<br>📉 いまの場所では、まなびがかせぎにつながりにくい（★×5万）。<b>スキルが活きる場</b>につながるトビラがあれば——`;
       if(p.disasterTurns > 0){ amt -= 10; note += `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`; }
       if(p.loan > 0){
         const pay = Math.min(6, p.loan);
@@ -1157,6 +1159,10 @@ function showChoiceModal(idx, def, type, skipCount){
       if(o.special === "letter"){
         p.letterIn = 2;
       }
+      if(o.unlock && p.mult < 10){
+        p.mult = 10;
+        notes.push("🔓 スキルが活きる場につながった！ これから、まなびが <b>★×10万</b> でかせぎになる。");
+      }
       if(o.special === "shogakukin"){
         if(p.shienDiscount || p.perk === "shienPro"){
           notes.push("🎗 支援を知っていたおかげで<b>返さなくていい奨学金</b>に出会えた！");
@@ -1256,7 +1262,8 @@ function showResult(){
     カギが足りないのと、扉があることを知らないのは、ぜんぜん違う。<br><br>
     🚪 それぞれのカードの<b>「ネタバラシ」ボタン</b>で、？？？の中身をのぞいてみよう。<br><br>
     🗣 話してみよう：<br>
-    ・同じ「おしごとマス」なのに、基本給がちがった。それは本人の努力のちがいだろうか？<br>
+    ・同じ「おしごとマス」・同じ★の数なのに、かせぎがぜんぜんちがった。それは本人の努力のちがいだろうか？<br>
+    ・ウガンダ育ちは、★を増やすだけではかせぎが伸びなかった。「まなび」が実るために必要だった<b>もうひとつのカギ</b>は何だった？<br>
     ・あなたの家庭カードから見えなかったのは、どんなトビラだった？　逆に、見えていた強みは？<br>
     ・親を亡くしたウガンダの子には、何が「見えて」いた？　それはなぜだろう？<br>
     ・今日あなたが学校に持ってきたもの——スマホ、無料の教科書、給食。それは、どの家庭カードの世界のものだった？<br>
@@ -1401,7 +1408,7 @@ const RULE_PAGES = [
   ]},
   {tag:"📚 まなびとおかね", title:"★まなびは、未来のカギ", items:[
     ["📚","<b>まなびマス</b>やトビラ、🎴できごとで★まなびが貯まる。"],
-    ["💰","かせぎは「<b>基本給＋★×10万</b>」。基本給は、生まれた場所でちがう…！"],
+    ["💰","かせぎは「<b>基本給＋★×掛け率</b>」。基本給も、★がかせぎになる度合いも、生まれた場所でちがう…！"],
     ["🎴","<b>できごとマス</b>では、ラッキーもアクシデントも起こる。"],
   ]},
   {tag:"🏠 家庭カード", title:"スタート地点は、国によってちがう", items:[
