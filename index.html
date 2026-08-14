@@ -647,6 +647,13 @@ $("startBtn").onclick = ()=>{
   heavyOn = $("heavyToggle").checked;
   const rows = [...$("playerInputs").children];
   const famDeck = shuffle([...FAMILIES]);
+  /* どんな人数でも、ウガンダの遺児家庭(w5/w6のどちらか)が必ず1枚は配られる */
+  const dealN = Math.min(rows.length, famDeck.length);
+  if(!famDeck.slice(0, dealN).some(f=>f.id==="w5"||f.id==="w6")){
+    const oi = famDeck.findIndex(f=>f.id==="w5"||f.id==="w6");
+    const ti = Math.floor(Math.random()*dealN);
+    [famDeck[ti], famDeck[oi]] = [famDeck[oi], famDeck[ti]];
+  }
   players = rows.map((r,i)=>{
     const nm = r.querySelector("input").value.trim() || `プレイヤー${i+1}`;
     const fam = famDeck[i % famDeck.length];
@@ -865,7 +872,7 @@ function resolveSquare(idx){
       const job = jobTitle(p);
       title = `${job.ic} ${AGES[p.pos]}歳・いまのしごと：${job.t}`;
       note = `かせぎは <b>基本給${p.fam.wage}万 ＋ まなび×${p.mult}万${p.allow>0 ? " ＋ 仕送り"+p.allow+"万" : ""}</b><br>まなびが増えると、しごともかせぎも変わっていく`;
-      if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——`;
+      if(p.fam.wage < 20) note += `<br>🌍 同じはたらきでも、生まれた場所で基本給はちがう——<br>じつは現実のウガンダの平均収入は、日本の<b>約20分の1</b>。このゲームでは、いっしょに遊べるように差をゆるめている。`;
       if(p.mult < 10) note += `<br>📉 いまの場所では、まなびがかせぎにつながりにくい（★×5万）。<b>スキルが活きる場</b>につながるトビラがあれば——`;
       if(p.disasterTurns > 0){ amt -= 10; note += `<br>⚠️ 災害の影響で −10万（あと${p.disasterTurns}ターン）`; }
       if(p.loan > 0){
