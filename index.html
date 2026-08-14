@@ -1496,14 +1496,18 @@ function whoChips(list){
   return list.map(p=>`<span class="who"><span class="p-dot" style="background:${p.color}"></span>${p.name}</span>`).join("");
 }
 function showAllDoorsModal(){
+  /* グループ分けキーは言語に依存しない日本語の原文で作る（{ja,en}オブジェクトを文字列化すると
+     全部 [object Object] になり、同年齢の別トビラが混線してクラッシュする） */
+  const kt = v => v == null ? "" : (v.ja !== undefined ? v.ja : v);
   const map = new Map();
   players.forEach(p=>{
     p.doorLog.forEach(e=>{
-      const key = `${e.age}|${e.title}|${e.variant || ""}`;
+      const key = `${e.age}|${kt(e.title)}|${kt(e.variant)}`;
       if(!map.has(key)) map.set(key, {age:e.age, title:e.title, variant:e.variant, opts:e.opts,
         perOpt:e.opts.map(()=>({chosen:[], locked:[], unseen:[]}))});
       const g = map.get(key);
       e.opts.forEach((o,i)=>{
+        if(!g.perOpt[i]) g.perOpt[i] = {chosen:[], locked:[], unseen:[]};
         if(e.chosen === i) g.perOpt[i].chosen.push(p);
         else if(e.states[i] === "unseen") g.perOpt[i].unseen.push(p);
         else if(e.states[i] === "locked") g.perOpt[i].locked.push(p);
@@ -1517,7 +1521,7 @@ function showAllDoorsModal(){
     variants.forEach(rural=>{
       const dummy = {fam:{rural}, perk:null, money:0, learn:0, shienDiscount:false, name:""};
       const def = choiceDef(sq.key, dummy);
-      const key = `${AGES[i]}|${def.title}|${def.variant || ""}`;
+      const key = `${AGES[i]}|${kt(def.title)}|${kt(def.variant)}`;
       if(!map.has(key)) map.set(key, {age:AGES[i], title:def.title, variant:def.variant, opts:def.opts,
         perOpt:def.opts.map(()=>({chosen:[], locked:[], unseen:[]})), untrodden:true});
     });
