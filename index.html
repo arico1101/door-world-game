@@ -372,12 +372,18 @@ const FAMILIES = [
    asa:"運転手つきの車で外国人学校へ。窓の外には、歩いて登校する子どもたち。",
    story:"インターナショナルスクールに通い、長期休みには帰国する。車の窓から見える市場の暮らしを、じつはまだ、よく知らない。",
    perkText:"国際感覚：はじめから まなび+1／海外・留学系トビラのおかねのカギ −50万"},
-  {id:"w5", name:"ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
+  {id:"w5", name:"支援と出会えた、ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
    hide:["career","global"], perk:"shienPro",
    daily:"約250円", dailyNote:"世界の貧困ライン・1日約300円を下回る",
    asa:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",
    story:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。そのとき出会った遺児支援の団体で、「支えてくれる仕組みと人」を誰よりも早く知った。",
    perkText:"支援を知っている：奨学金・支援の選択肢がすべて見えている／はじめて使うと まなび+1"},
+  {id:"w6", name:"まだ支援と出会えていない、ウガンダの遺児の家庭", region:"ウガンダ", rural:true, money:20, allow:0, wage:10,
+   hide:["shien","career","global"], perk:"deai",
+   daily:"約250円", dailyNote:"世界の貧困ライン・1日約300円を下回る",
+   asa:"5時起き。水くみと弟の世話、母の畑を手伝ってから、6km歩いて学校へ。",
+   story:"小さいころ、父を病気で亡くした。母と畑を守りながら学校に通う。支えてくれる仕組みが世界にあることを、まだ誰も教えてくれていない。",
+   perkText:"出会いがチカラになる：「支援」の選択肢がはじめて見えたとき、まなび+1＆支援・まなび系のカギが −50万 になる"},
 ];
 
 /* 盤面 36マス */
@@ -589,7 +595,7 @@ $("startBtn").onclick = ()=>{
       allow:fam.allow, learn:1 + ((fam.perk==="kinben"||fam.perk==="kokusai")?1:0), happy:0,
       hidden:new Set(fam.hide),
       open:0, locked:0, unseen:0, doorLog:[],
-      shienDiscount:false, shienUsed:false,
+      shienDiscount:false, shienUsed:false, deaiUsed:false,
       hadHeavy:false, disasterTurns:0, letterIn:null,
       done:false, rankAt:null,
     };
@@ -808,8 +814,10 @@ function drawEvent(idx){
   if(ev.kind === "info"){
     const n = p.perk === "tasukeai" ? 2 : 1;
     const revealed = revealTags(p, ev.reveal, n);
-    showInfoModal("event", ev.t, ev.d, {}, idx,
-      revealed > 0 ? `👁 見えていなかった選択肢が <b>${revealed}個</b>、見えるようになった！` : null);
+    let note = revealed > 0 ? `👁 見えていなかった選択肢が <b>${revealed}個</b>、見えるようになった！` : null;
+    const deaiNote = checkDeai(p);
+    if(deaiNote) note = (note ? note + "<br>" : "") + deaiNote;
+    showInfoModal("event", ev.t, ev.d, {}, idx, note);
   }
   else if(ev.kind === "fair"){
     showChoiceModal(idx, {
@@ -835,6 +843,16 @@ function revealTags(p, target, n){
     if(p.hidden.has(t)){ p.hidden.delete(t); count++; n--; }
   }
   return count;
+}
+/* 「まだ支援と出会えていない遺児」：支援がはじめて見えた瞬間に発動 */
+function checkDeai(p){
+  if(p.perk === "deai" && !p.deaiUsed && !p.hidden.has("shien")){
+    p.deaiUsed = true;
+    p.shienDiscount = true;
+    p.learn += 1;
+    return "🎗 はじめて「支援」の存在を知った——出会いがチカラになる！ まなび+1、これから支援・まなび系のトビラのカギが <b>−50万</b> になる。";
+  }
+  return null;
 }
 
 /* ---------- 重いライフイベント ---------- */
@@ -1012,15 +1030,18 @@ function showChoiceModal(idx, def, type, skipCount){
       if(o.special === "revealAll" && p.hidden.size > 0){
         p.hidden.clear();
         notes.push("👁 いままで見えていなかった選択肢が、ぜんぶ見えるようになった！");
+        const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "reveal2"){
         const n = revealTags(p, "any", p.perk === "tasukeai" ? 4 : 2);
         if(n > 0) notes.push(`👁 見えていなかった選択肢が <b>${n}個</b>、見えるようになった！`);
+        const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "shienSupport"){
         p.shienDiscount = true;
         p.hidden.delete("shien");
         notes.push("🎗 これから先、支援・まなび系のトビラのカギが <b>−50万</b> になる。");
+        const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "letter"){
         p.letterIn = 2;
