@@ -558,13 +558,26 @@ function choiceDef(key, p){
         {t:{ja:"給料の高いしごとに移る",en:"Move to a better-paid job"}, d:{ja:"スキルを高く買ってもらう",en:"Sell your skills higher"}, req:{learn:4}, fx:{money:100}},
         {t:{ja:"いまのしごとを続ける",en:"Keep your current job"}, d:{ja:"安定して働き、少し昇給した",en:"Steady work, a small raise"}, req:{}, fx:{money:30}},
       ]};
-    case "kaigai": return {
-      title:{ja:"留学のトビラ",en:"The Study-Abroad Door"}, body:{ja:"海の向こうで学んでみたい気持ちがふくらむ。",en:"You want to learn across the sea."},
-      opts:[
+    case "kaigai": {
+      const base = [
         {t:{ja:"海外の大学に留学する",en:"Study at a university abroad"}, d:{ja:"言葉の壁をこえた先に、新しい世界",en:"Beyond the language barrier, a new world"}, tag:"global", req:{money:150, learn:4}, fx:{money:-150, learn:2, happy:3}, unlock:true},
         {t:{ja:"外国で働いてみる",en:"Work in another country"}, d:{ja:"仕送りで、遠くの家族も支えられる",en:"Send money home to your family"}, req:{learn:3}, fx:{money:80, happy:1}, unlock:true},
         {t:{ja:"自分の国で暮らしつづける",en:"Stay in your own country"}, d:{ja:"ここにも、いい暮らしはある",en:"There is a good life here too"}, req:{}, fx:{happy:1}},
-      ]};
+      ];
+      /* 遺児家庭だけに、あしながAAI（お金のカギがない留学奨学金）の扉が存在する */
+      if(p.perk === "shienPro" || p.perk === "deai") return {
+        title:{ja:"留学のトビラ",en:"The Study-Abroad Door"}, variant:{ja:"遺児家庭",en:"orphan families"},
+        body:{ja:"海の向こうで学んでみたい気持ちがふくらむ。",en:"You want to learn across the sea."},
+        opts:[
+          {t:{ja:"AAI——遺児のための留学奨学金に挑戦する",en:"AAI — try for the orphans' study-abroad scholarship"},
+           d:{ja:"学費も渡航費も支援。カギはお金ではなく、まなびと『志』",en:"Fees and travel covered. The keys are learning and a mission — not money"},
+           tag:"shien", req:{learn:5}, fx:{learn:2, happy:3}, special:"aai", unlock:true},
+          ...base,
+        ]};
+      return {
+        title:{ja:"留学のトビラ",en:"The Study-Abroad Door"}, body:{ja:"海の向こうで学んでみたい気持ちがふくらむ。",en:"You want to learn across the sea."},
+        opts:base};
+    }
     case "manabinaoshi": return {
       title:{ja:"学びなおしのトビラ",en:"The Relearning Door"}, body:{ja:"大人になってからでも、学びの扉は開けなおせる。",en:"Even as an adult, the door to learning can reopen."},
       opts:[
@@ -578,7 +591,18 @@ function choiceDef(key, p){
         {t:{ja:"地域の子どもたちに勉強を教える",en:"Teach local kids"}, d:{ja:"もらった支えを、次の世代へ手わたす",en:"Pass the support you received to the next generation"}, tag:"chiiki", req:{learn:3}, fx:{learn:1, happy:2}},
         {t:{ja:"今の道をきわめる",en:"Master your current path"}, d:{ja:"続けることも立派な挑戦",en:"Continuing is a challenge too"}, req:{}, fx:{money:20}},
       ]};
-    case "yume": return {
+    case "yume":
+      /* AAIを選んだ人は「志」の約束つき——夢は祖国への貢献に絞られる */
+      if(p.aai) return {
+        title:{ja:"大きな夢のトビラ",en:"The Big Dream Door"}, variant:{ja:"AAIの約束",en:"the AAI promise"},
+        body:{ja:"人生でいちばんやりたかったこと——でも、あなたには果たすべき約束がある。志を、祖国へ。",
+              en:"The thing you most wanted to do — but you carry a promise. Your mission belongs to your homeland."},
+        opts:[
+          {t:{ja:"こんどは、じぶんがふるさとの子の学費を支える",en:"Now it's your turn to pay a child's school fees"}, d:{ja:"もらった支えを、次の子へ——恩返しという夢",en:"Passing the support you received to the next child — a dream called giving back"}, req:{money:50, learn:4}, fx:{money:-50, happy:4}},
+          {t:{ja:"祖国に会社をおこし、しごとをつくる",en:"Start a company back home and create jobs"}, d:{ja:"ひとつの雇用が、いくつもの家庭のカギになる",en:"Every job you create is a key for another family"}, req:{money:150, learn:6}, fx:{money:-150, learn:1, happy:4}},
+          {t:{ja:"村々をまわって、じぶんの物語を語る",en:"Travel the villages, telling your story"}, d:{ja:"あなたの生き方そのものが、次の子のトビラになる",en:"Your life itself becomes a door for the next child"}, req:{}, fx:{happy:2}},
+        ]};
+      return {
       title:{ja:"大きな夢のトビラ",en:"The Big Dream Door"}, body:{ja:"人生でいちばんやりたかったこと、覚えてる？",en:"Remember the thing you most wanted to do?"},
       opts:[
         {t:{ja:"世界一周の旅に出る",en:"Travel around the world"}, d:{ja:"ずっと夢だったあの計画を実行",en:"The plan you always dreamed of"}, req:{money:200}, fx:{money:-200, happy:4}},
@@ -616,6 +640,7 @@ const EVENTS = [
   {kind:"info", reveal:"any", t:{ja:"外国から来た人と、じっくり話しこんだ",en:"A long talk with a visitor from abroad"}, d:{ja:"知らなかった世界の入口が、少し見えた",en:"A door to a world you didn't know cracked open"}},
   {kind:"info", reveal:"shien", t:{ja:"「返さなくていい奨学金で大学に行けた」という話を聞いた",en:"You heard of a scholarship you never repay"}, d:{ja:"世界には、そういう仕組みをつくっている人たちがいる",en:"Somewhere, people are building systems like that"}},
   {kind:"info", reveal:"chiiki", t:{ja:"近所の家の夕食に招かれた",en:"Invited to dinner next door"}, d:{ja:"「困ったときはお互いさま」。そういう世界が、すぐそばにあった",en:"\"We help each other here.\" That world was right beside you"}},
+  {only:"rural", kind:"info", reveal:"global", t:{ja:"遺児のための留学奨学金『AAI』があると聞いた",en:"You heard about \"AAI\", a study-abroad scholarship for orphans"}, d:{ja:"学費も渡航費も出るらしい。ただし問われるのは、お金ではなく『志』だという",en:"It covers fees and travel — but what it asks for, they say, is not money. It's a sense of mission"}},
   {kind:"fair", t:{ja:"NGOの進学説明会が、となりの町まで来た",en:"An NGO study fair came to the next town"}, d:{ja:"バス代はかかるけど、行けば情報が手に入る",en:"Bus fare costs — but information awaits"}},
 ];
 
@@ -723,7 +748,7 @@ $("startBtn").onclick = ()=>{
       name:nm, color:PCOLORS[i], fam,
       region:fam.region, perk:fam.perk,
       pos:0, money:fam.money, initMoney:fam.money,
-      mult:fam.rural ? 5 : 10,
+      mult:fam.rural ? 5 : 10, aai:false,
       allow:fam.allow, learn:1 + ((fam.perk==="kinben"||fam.perk==="kokusai")?1:0), happy:0,
       hidden:new Set(fam.hide),
       open:0, locked:0, unseen:0, doorLog:[], loan:0,
@@ -1265,6 +1290,11 @@ function showChoiceModal(idx, def, type, skipCount){
         p.mult = 10;
         notes.push(ja ? "🔓 スキルが活きる場につながった！ これから、まなびが <b>★×10万</b> でかせぎになる。" : `🔓 You reached a place where skills pay! Learning now earns <b>★×${fm(10)}</b>.`);
       }
+      if(o.special === "aai"){
+        p.aai = true;
+        notes.push(ja ? "🤝 AAIは『志』の奨学金——卒業したら、リーダーシップで祖国に貢献する約束。あなたの「大きな夢」は、祖国とともにある。"
+                      : "🤝 AAI is a scholarship of purpose — a promise to lead and give back to your home country. Your \"big dream\" now belongs with your homeland.");
+      }
       if(o.special === "shogakukin"){
         if(p.shienDiscount || p.perk === "shienPro"){
           notes.push(ja ? "🎗 支援を知っていたおかげで<b>返さなくていい奨学金</b>に出会えた！" : "🎗 Because you knew the support system, you found <b>a scholarship you never repay</b>!");
@@ -1375,6 +1405,7 @@ function showResult(){
     ・ウガンダ育ちは、★を増やすだけではかせぎが伸びなかった。「まなび」が実るために必要だった<b>もうひとつのカギ</b>は何だった？<br>
     ・あなたの家庭カードから見えなかったのは、どんなトビラだった？　逆に、見えていた強みは？<br>
     ・親を亡くしたウガンダの子には、何が「見えて」いた？　それはなぜだろう？<br>
+    ・AAIの扉は「ずるい」？——その扉を開けた人の「大きな夢」は、どうなっていた？<br>
     ・今日あなたが学校に持ってきたもの——スマホ、無料の教科書、給食。それは、どの家庭カードの世界のものだった？<br>
     ・日本にいる私たちが、世界の遺児にわたせる「カギ」って、何だろう？` : `
     <b>■ Reflection time</b><br>
@@ -1390,6 +1421,7 @@ function showResult(){
     · For those raised in Uganda, more ★ alone didn't raise pay. What was <b>the other key</b> that made learning bear fruit?<br>
     · Which doors were invisible from your Family Card? And what strengths could you see?<br>
     · What could the orphan in Uganda "see"? Why?<br>
+    · Was the AAI door "unfair"? — And what happened to that player's "big dream"?<br>
     · The things you brought to school today — a phone, free textbooks, school lunch. Which family card's world do they belong to?<br>
     · What "keys" could we hand to orphans around the world?`;
 }
@@ -1547,6 +1579,7 @@ const RULE_PAGES = [
   {tag:{ja:"🇺🇬 なぜウガンダ？",en:"🇺🇬 Why Uganda?"}, title:{ja:"実在する場所と、実在する支え",en:"A real place, and real support"}, items:[
     ["🗺",{ja:"このゲームの舞台のひとつ、ウガンダは実在の国。病気や紛争で親を亡くした子どもたちが、たくさん暮らしています。",en:"Uganda, one of this game's settings, is a real country — home to many children who lost parents to illness or conflict."}],
     ["🎗",{ja:"あしなが育英会は<b>「あしながウガンダ」</b>で、現地の遺児の教育を実際に支えています。ゲームに出てくる「支援団体」のモデルです。",en:"The Ashinaga Foundation really supports orphans' education there through <b>Ashinaga Uganda</b> — the model for the \"aid groups\" in this game."}],
+    ["🎓",{ja:"あしながの<b>AAI</b>は、アフリカの遺児を海外の大学へ送り出す奨学金。ただの援助ではなく、<b>志をもって祖国に貢献するリーダーを育てる「約束」</b>の仕組みです。",en:"Ashinaga's <b>AAI</b> sends African orphans to universities abroad — not simple charity, but a \"promise\": raising <b>leaders who bring their talents home</b>."}],
     ["🤝",{ja:"ゲームの中で見えた「支え」は、現実の世界にもある。ふりかえりで、日本にいる私たちにできることを話してみよう。",en:"The support you saw in the game exists in the real world too. In reflection time, talk about what we can do."}],
   ]},
 ];
