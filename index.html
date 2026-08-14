@@ -745,8 +745,10 @@ function showScreen(id){
 }
 
 /* ---------- 家庭カードの非公開ドラフト ---------- */
+let famRevealIdx = null;  /* カード確認フェーズ中＝そのプレイヤーの番号。🏠ボタンの割り込み復帰用 */
 function revealFamilyCard(i){
-  if(i >= players.length){ closeModal(); beginTurn(); return; }
+  if(i >= players.length){ famRevealIdx = null; closeModal(); beginTurn(); return; }
+  famRevealIdx = i;
   const p = players[i];
   const ja = lang === "ja";
   openModal(`
@@ -1573,18 +1575,24 @@ $("helpBtnSetup").onclick = ()=>renderRules(0);
 $("helpBtnGame").onclick = ()=>{
   if(!$("overlay").classList.contains("open")) renderRules(0);
 };
-/* タイトルにもどる（確認つき） */
+/* タイトルにもどる（確認つき）
+   通常はモーダル表示中は無効。ただし家庭カード確認フェーズ中は割り込み可
+   （途中で人数変更したくなったときのため）。「つづける」でそのプレイヤーの確認画面に戻る */
 $("homeBtn").onclick = ()=>{
-  if($("overlay").classList.contains("open")) return;
+  const inFamReveal = famRevealIdx !== null;
+  if($("overlay").classList.contains("open") && !inFamReveal) return;
   const ja = lang === "ja";
   openModal(`
     <span class="m-tag" style="background:var(--brown)">🏠 ${ja ? "タイトルにもどる" : "Back to title"}</span>
     <h2>${ja ? "ゲームをやめて、タイトルにもどる？" : "Quit this game and return to the title?"}</h2>
-    <p class="m-body">${ja ? "いまのゲームの記録は消えます。" : "The current game will be lost."}</p>
+    <p class="m-body">${ja ? "いまのゲームの記録は消えます。<br>人数やメンバーを変えるときも、ここからやりなおせます。" : "The current game will be lost.<br>Return here to change players or group size."}</p>
     <button class="m-btn" id="mQuit">${ja ? "タイトルにもどる" : "Back to title"}</button>
     <button class="m-btn ghost" id="mStay" style="margin-top:10px; background:var(--paper); color:var(--brown); border:2px solid var(--brown); box-shadow:var(--shadow)">${ja ? "つづける" : "Keep playing"}</button>`);
-  $("mQuit").onclick = ()=>{ closeModal(); showScreen("setup"); initSetup(); applyLang(); };
-  $("mStay").onclick = closeModal;
+  $("mQuit").onclick = ()=>{ famRevealIdx = null; closeModal(); showScreen("setup"); initSetup(); applyLang(); };
+  $("mStay").onclick = ()=>{
+    if(inFamReveal) revealFamilyCard(famRevealIdx);  /* カード確認に復帰（めくる前の画面から） */
+    else closeModal();
+  };
 };
 
 initSetup();
