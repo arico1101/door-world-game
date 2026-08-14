@@ -810,7 +810,7 @@ function revealFamilyCard(i){
           <span class="fs-wage">💼 ${ja ? "おしごとの基本給" : "Base pay"}：<b>${fm(p.fam.wage)}</b>（${ja ? "＋まなび×" : "＋Learn×"}<b>${fm(p.fam.rural?5:10)}</b>）</span>
           <span class="fs-allow">📮 ${ja ? "仕送り" : "Allowance"}：<b>${p.allow>0 ? (ja ? "毎回のかせぎ +"+fm(p.allow) : "+"+fm(p.allow)+" per payday") : (ja ? "なし" : "none")}</b></span>
           <span class="fs-region">🌍 ${ja ? "生まれた場所" : "Born in"}：<b>${L(p.fam.region)}</b></span>
-          <span class="fs-hidden">👁 ${ja ? "まだ見えていない選択肢" : "Options you can't see yet"}：<b>${hiddenN}</b>${hiddenN>0 ? (ja ? "個（そのマスでは「？？？」と表示されます）" : " (shown as ？？？ on those squares)") : ""}</span>
+          <span class="fs-hidden">👁 ${ja ? "まだ見えていない選択肢" : "Options you can't see yet"}：<b>${hiddenN}${ja ? "個" : ""}</b>${hiddenN>0 ? (ja ? "（そのマスでは「？？？」と表示されます）" : " (shown as ？？？ on those squares)") : ""}</span>
           <span class="fs-perk">✨ ${ja ? "とくい" : "Strength"}：<b>${L(p.fam.perkText)}</b></span>
         </div>
       </div>
