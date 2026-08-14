@@ -756,7 +756,9 @@ function revealFamilyCard(i){
     <h2>${ja ? p.name+" さんだけ、見てください" : "For "+p.name+"'s eyes only"}</h2>
     <p class="m-body">${ja ? "ほかの人には見せずに、そっとめくってね。<br>あなたのスタート地点が書いてあります。"
       : "Flip it quietly — don't show the others.<br>Your starting point is written inside."}</p>
-    <button class="m-btn" id="mFlip">${ja ? "カードをめくる" : "Flip the card"}</button>`);
+    <button class="m-btn" id="mFlip">${ja ? "カードをめくる" : "Flip the card"}</button>
+    <button class="chip-btn" id="mHome" style="display:block; margin:16px auto 0">${ja ? "🏠 タイトルにもどる（人数を変える）" : "🏠 Back to title (change players)"}</button>`);
+  $("mHome").onclick = showHomeConfirm;
   $("mFlip").onclick = ()=>{
     const hiddenN = p.hidden.size;
     openModal(`
@@ -777,7 +779,9 @@ function revealFamilyCard(i){
       </div>
       <button class="m-btn" id="mNext">${ja
         ? "OK、覚えた" + (i < players.length-1 ? "（次の人へ）" : "（ゲームスタート！）")
-        : "Got it" + (i < players.length-1 ? " (next player)" : " (start the game!)")}</button>`);
+        : "Got it" + (i < players.length-1 ? " (next player)" : " (start the game!)")}</button>
+      <button class="chip-btn" id="mHome" style="display:block; margin:16px auto 0">${ja ? "🏠 タイトルにもどる（人数を変える）" : "🏠 Back to title (change players)"}</button>`);
+    $("mHome").onclick = showHomeConfirm;
     $("mNext").onclick = ()=>revealFamilyCard(i+1);
   };
 }
@@ -1575,12 +1579,10 @@ $("helpBtnSetup").onclick = ()=>renderRules(0);
 $("helpBtnGame").onclick = ()=>{
   if(!$("overlay").classList.contains("open")) renderRules(0);
 };
-/* タイトルにもどる（確認つき）
-   通常はモーダル表示中は無効。ただし家庭カード確認フェーズ中は割り込み可
-   （途中で人数変更したくなったときのため）。「つづける」でそのプレイヤーの確認画面に戻る */
-$("homeBtn").onclick = ()=>{
+/* タイトルにもどる確認ダイアログ。
+   「つづける」は、家庭カード確認フェーズ中ならそのプレイヤーの確認画面(めくる前)に復帰 */
+function showHomeConfirm(){
   const inFamReveal = famRevealIdx !== null;
-  if($("overlay").classList.contains("open") && !inFamReveal) return;
   const ja = lang === "ja";
   openModal(`
     <span class="m-tag" style="background:var(--brown)">🏠 ${ja ? "タイトルにもどる" : "Back to title"}</span>
@@ -1590,9 +1592,14 @@ $("homeBtn").onclick = ()=>{
     <button class="m-btn ghost" id="mStay" style="margin-top:10px; background:var(--paper); color:var(--brown); border:2px solid var(--brown); box-shadow:var(--shadow)">${ja ? "つづける" : "Keep playing"}</button>`);
   $("mQuit").onclick = ()=>{ famRevealIdx = null; closeModal(); showScreen("setup"); initSetup(); applyLang(); };
   $("mStay").onclick = ()=>{
-    if(inFamReveal) revealFamilyCard(famRevealIdx);  /* カード確認に復帰（めくる前の画面から） */
+    if(inFamReveal) revealFamilyCard(famRevealIdx);
     else closeModal();
   };
+}
+/* 右上の🏠ボタン（モーダル表示中はオーバーレイの下になるため、通常画面でのみ有効） */
+$("homeBtn").onclick = ()=>{
+  if($("overlay").classList.contains("open")) return;
+  showHomeConfirm();
 };
 
 initSetup();
