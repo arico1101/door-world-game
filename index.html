@@ -307,6 +307,11 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 .res-card .r-story{font-size:12.5px; line-height:1.7; opacity:.8; margin:6px 0 10px;}
 .r-stats{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
 .r-stats .fx{font-size:13px;}
+.r-ending{
+  background:#FBF6EA; border:1.5px dashed rgba(74,58,48,.35); border-radius:10px;
+  padding:9px 12px; font-size:12.5px; line-height:1.8; margin-bottom:10px;
+}
+.r-ending b{color:#B8860B;}
 .doorbar{display:flex; height:16px; border-radius:999px; background:#E4DDD2; overflow:hidden; border:2px solid var(--brown);}
 .doorbar .seg-open{background:var(--teal);}
 .doorbar .seg-lock{background:var(--stone);}
@@ -1365,6 +1370,51 @@ function endTurn(){
 }
 
 /* ===================== result ===================== */
+/* 35歳のいま: 生まれではなく「どう生きたか」(文脈×♥の量)でエンディングが決まる */
+const ENDINGS = {
+  village:[  /* ウガンダ育ち・★が実る場に出会えないまま */
+    {ja:"日が昇る前から働き、日が沈むと眠る。選べた記憶より、選べなかった記憶のほうが多い。——でも、それはあなたのせいだったのだろうか？",
+     en:"You work before sunrise and sleep at sundown. You remember far more moments you couldn't choose than ones you could. — But was that really your fault?"},
+    {ja:"畑としごとを行き来する毎日。楽ではないけれど、困ったとき頼れる顔がいくつも浮かぶ。開けられなかった扉のことは、ときどき思い出す。",
+     en:"Days move between the field and work. It isn't easy, but when trouble comes, many faces come to mind. Now and then, you think of the doors you couldn't open."},
+    {ja:"村はずれの小さな家。夕方には教え子や近所の子が集まってくる。畑とラジオと、にぎやかな食卓——あなたが開けてきた扉のむこうに、この暮らしがある。",
+     en:"A small house at the edge of the village. In the evening, your students and the neighbors' kids crowd in. The field, the radio, a lively table — beyond the doors you opened, this life was waiting."},
+  ],
+  city:[  /* ウガンダ育ち・カンパラや海外など「スキルが活きる場」に出た */
+    {ja:"たしかに都市に出た。稼ぎも増えた。それでも、開けたかった扉に手が届いたかというと——都会は、カギの値段も高かった。",
+     en:"You did make it to the city, and you earn more now. But did the doors you longed for come within reach? — In the city, even keys have city prices."},
+    {ja:"都市のしごとに慣れ、暮らし向きは村にいたころと別ものになった。ただ、にぎやかな通りでふと、村の夕方の音を思い出すことがある。",
+     en:"You've settled into city work, and life looks nothing like the village years. Yet on a noisy street, you sometimes hear the evening sounds of home."},
+    {ja:"カンパラのアパートには電気も水道もある。村を出た日に見た景色は、いま日常になった。月末には故郷に仕送りをして、長い休みには土の道を歩いて帰る。",
+     en:"Your Kampala apartment has electricity and running water. The view that amazed you the day you left the village is now everyday life. You send money home at month's end, and walk the dirt road back for the holidays."},
+  ],
+  aai:[  /* AAI——志の約束とともに */
+    {ja:"約束を胸に祖国へもどった。思うように進まない日々に、志が重く感じられることもある。——それでも、あなたが開けた扉は、まだ閉じていない。",
+     en:"You came home carrying the promise. Some days it feels heavy, when nothing moves the way you hoped. — And yet, the door you opened has not closed."},
+    {ja:"祖国にもどって働いている。理想と現実のあいだで悩む日も多いけれど、あなたの姿を見て進路を決めた子が、もう何人もいる。",
+     en:"You work in your home country now. Many days are a struggle between ideals and reality — but more than a few kids have chosen their path after watching yours."},
+    {ja:"留学から祖国へもどり、しごとと支援の輪をつくる毎日。村の学校では「あの人みたいになりたい」という子が育っている。約束は、暮らしになった。",
+     en:"Back from study abroad, you build work and circles of support. In the village school, children say they want to be like you. The promise became a life."},
+  ],
+  west:[  /* 欧米・日本育ち */
+    {ja:"扉はいつも目の前にあった。カギも、たぶん足りていた。それでも開けなかったのは、なぜだろう。",
+     en:"The doors were always right in front of you. You probably even had the keys. Why didn't you open them?"},
+    {ja:"安定した暮らし。ふとSNSを眺めながら、選ばなかった道を考える夜もある。",
+     en:"A stable life. Some nights, scrolling your phone, you wonder about the roads you didn't take."},
+    {ja:"好きなしごとと、気の合う仲間と、ときどき旅行。選択肢の多い人生だった——それが「当たり前」だと、思っていたかもしれない。",
+     en:"Work you love, friends you click with, a trip now and then. A life full of options — you may have thought that was just \"normal\"."},
+  ],
+};
+function endingText(p){
+  const ctx = p.aai ? "aai" : (p.fam.rural ? (p.mult >= 10 ? "city" : "village") : "west");
+  const tier = p.happy >= 6 ? 2 : (p.happy >= 3 ? 1 : 0);
+  let t = L(ENDINGS[ctx][tier]);
+  if(p.perk === "deai" && !p.deaiUsed){
+    t += "<br>" + L({ja:"——もし、支援と出会えていたら。その「もしも」の答えは、となりのプレイヤーの人生が知っている。",
+                     en:"— If only support had found you. The answer to that \"what if\" lives in another player's life at this table."});
+  }
+  return t;
+}
 function showResult(){
   showScreen("result");
   const sorted = [...players].sort((a,b)=> b.happy - a.happy || b.money - a.money);
@@ -1387,6 +1437,7 @@ function showResult(){
         <span class="fx">${ja ? `残金 ${fm(p.money)}（スタート比 ${diff>=0?"+":""}${fm(diff)}）` : `Left: ${fm(p.money)} (${diff>=0?"+":""}${fm(diff)} vs start)`}</span>
         <span class="fx" style="color:#00A3BD">${ja ? "まなび" : "Learn"} ★${p.learn}</span>
       </div>
+      <div class="r-ending">🌅 <b>${ja ? "35歳のいま" : "Life at 35"}</b>：${endingText(p)}</div>
       <div class="doorbar">
         <div class="seg-open" style="width:${pct(p.open)}%"></div>
         <div class="seg-lock" style="width:${pct(p.locked)}%"></div>
