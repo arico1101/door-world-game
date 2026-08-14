@@ -3,261 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TOBIRA World — How to Play (A4 print)</title>
+<title>TOBIRA World — Rule Sheet (A4)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=DotGothic16&display=swap" rel="stylesheet">
 <style>
 :root{
   --green:#78BE21; --crimson:#FF6858; --orange:#FFC04B; --teal:#00A3BD;
   --brown:#4A3A30; --cream:#FBF8F1; --paper:#FFFFFF; --momo:#F291B5;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-@page{ size:A4 portrait; margin:0; }
-html,body{
-  font-family:"Zen Maru Gothic",'Hiragino Maru Gothic ProN',sans-serif;
-  color:var(--brown); background:#e8e2d7;
+@page{size:A4; margin:0;}
+html,body{background:#888;}
+body{font-family:"Zen Maru Gothic",'Hiragino Maru Gothic ProN',sans-serif; color:var(--brown);}
+.sheet{
+  width:210mm; height:297mm; margin:0 auto; background:var(--cream);
+  padding:7.5mm 10mm; display:flex; flex-direction:column; gap:2mm;
   -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }
-.sheet{
-  width:210mm; height:297mm; margin:0 auto; padding:9mm 10mm 8mm;
-  background:var(--cream);
-  background-image:radial-gradient(rgba(74,58,48,.05) 1.2px, transparent 1.2px);
-  background-size:26px 26px;
-  display:flex; flex-direction:column; gap:3mm;
-  overflow:hidden;
-}
-@media print{
-  body{background:none;}
-  /* A full 297mm can spill to a 2nd page from rounding — shave a hair */
-  .sheet{margin:0; box-shadow:none; height:296mm;}
-}
-@media screen{
-  body{padding:24px 0;}
-  .sheet{box-shadow:0 6px 24px rgba(74,58,48,.25); border-radius:4px;}
-}
+@media print{ html,body{background:var(--cream);} .sheet{margin:0; box-shadow:none; height:296mm;} }
+@media screen{ .sheet{box-shadow:0 4px 30px rgba(0,0,0,.4); margin:20px auto;} }
 
-/* ---------- header ---------- */
-header{display:flex; align-items:center; gap:5mm;}
-.mini-door{
-  width:13mm; height:16mm; flex:none; position:relative;
-  background:var(--brown); border-radius:7mm 7mm 1mm 1mm;
-  display:grid; place-items:center;
+/* header */
+.head{display:flex; align-items:center; gap:5mm; border-bottom:1mm solid var(--brown); padding-bottom:2mm;}
+.door-mark{
+  width:12mm; height:15mm; background:var(--brown); border-radius:6mm 6mm 1mm 1mm;
+  display:grid; place-items:center; flex:none;
 }
-.mini-door .leaf{width:10mm; height:13mm; border-radius:5.5mm 5.5mm 1mm 1mm; background:var(--orange);}
-.mini-door .knob{position:absolute; right:2.4mm; top:7.5mm; width:1.6mm; height:1.6mm; border-radius:50%; background:var(--teal);}
-.h-main h1{font-size:21px; font-weight:900; letter-spacing:.12em; line-height:1.2;}
-.h-main h1 small{font-size:13px; letter-spacing:.06em;}
-.h-main .sub{font-size:10.5px; font-weight:700; opacity:.8; margin-top:1mm; line-height:1.55;}
-.h-badges{margin-left:auto; display:flex; flex-direction:column; gap:1.5mm; align-items:flex-end;}
-.badge{
-  background:var(--paper); border:2px solid var(--brown); border-radius:999px;
-  font-size:9.5px; font-weight:900; padding:1mm 3.5mm; white-space:nowrap;
+.door-mark span{width:9mm; height:12mm; background:var(--orange); border-radius:4.5mm 4.5mm .8mm .8mm; position:relative;}
+.door-mark span::after{content:""; position:absolute; right:1.2mm; top:5.5mm; width:1.4mm; height:1.4mm; border-radius:50%; background:var(--teal);}
+.head h1{font-size:22pt; font-weight:900; letter-spacing:.12em; line-height:1; display:flex; align-items:center; gap:3mm;}
+.edition{
+  background:var(--orange); border:.5mm solid var(--brown); border-radius:99mm;
+  font-size:9pt; font-weight:900; letter-spacing:.05em; padding:.8mm 3.5mm; white-space:nowrap;
 }
-.badge.acc{background:var(--orange);}
+.head .sub{font-size:9pt; font-weight:700; margin-top:1.5mm;}
+.head .meta{margin-left:auto; display:flex; gap:1.5mm; align-items:center;}
+.chip{background:var(--paper); border:.5mm solid var(--brown); border-radius:99mm; padding:.8mm 3.5mm; font-size:8pt; font-weight:900; white-space:nowrap;}
 
-/* ---------- generic card ---------- */
-.card{
-  background:var(--paper); border:2px solid var(--brown); border-radius:3mm;
-  padding:2.6mm 3.2mm; box-shadow:1.5px 2.5px 0 rgba(74,58,48,.18);
-  break-inside:avoid;
+/* goal band */
+.goal-band{
+  background:var(--brown); color:var(--cream); border-radius:3mm; padding:2.5mm 5mm;
+  font-size:10pt; font-weight:700; line-height:1.55;
 }
-.card h2{
-  font-size:12.5px; font-weight:900; letter-spacing:.05em; margin-bottom:1.4mm;
-  display:flex; align-items:center; gap:1.5mm;
-}
-.card h2 .tag{
-  font-size:8px; font-weight:900; color:#fff; background:var(--teal);
-  border-radius:999px; padding:.4mm 2.2mm; letter-spacing:.1em;
-}
-.card p, .card li{font-size:9.9px; font-weight:700; line-height:1.62;}
-.card ul{list-style:none;}
-.card li{display:flex; gap:1.6mm; margin-bottom:.8mm;}
-.card li:last-child{margin-bottom:0;}
-.card li .ic{flex:none; width:4.2mm; text-align:center;}
-b{font-weight:900;}
-.hl{background:linear-gradient(transparent 62%, rgba(255,192,75,.55) 62%);}
+.goal-band b{color:var(--orange);}
 
-/* ---------- layout ---------- */
-.cols{display:grid; grid-template-columns:1fr 1fr; gap:3mm; align-items:start;}
-.col{display:flex; flex-direction:column; gap:3mm;}
-
-/* ---------- squares table ---------- */
-.sq-table{display:flex; flex-direction:column; gap:1.1mm;}
-.sq-row{display:flex; align-items:center; gap:2mm;}
-.sq-chip{
-  flex:none; width:22mm; display:flex; align-items:center; justify-content:center; gap:1mm;
-  border:1.8px solid var(--brown); border-radius:2mm; padding:.8mm 1mm;
-  font-size:9px; font-weight:900; background:var(--paper); white-space:nowrap;
+/* why band */
+.why-band{
+  background:var(--paper); border:.5mm dashed var(--brown); border-radius:3mm;
+  padding:1.6mm 4mm; font-size:8.2pt; font-weight:500; line-height:1.55;
 }
-.sq-chip .i{font-size:10.5px;}
-.sq-income{background:#EDF7DC; border-color:var(--green);}
-.sq-cost{background:#FFE9E7; border-color:var(--crimson);}
-.sq-event{background:#FFF3DC; border-color:var(--orange);}
-.sq-learn{background:#E0F4F8; border-color:var(--teal);}
-.sq-choice{background:var(--brown); color:var(--cream); border-color:var(--orange); box-shadow:0 0 0 1px rgba(255,192,75,.6);}
-.sq-row p{font-size:9.3px; line-height:1.5; font-weight:700;}
+.why-band b{font-weight:900;}
 
-/* ---------- flow ---------- */
-.flow{display:flex; flex-direction:column; gap:1.2mm;}
-.step{display:flex; gap:2mm; align-items:flex-start;}
+/* section bars */
+.sec-bar{
+  border-radius:2.5mm; padding:1.6mm 4mm; font-size:11pt; font-weight:900;
+  color:#fff; display:flex; align-items:baseline; gap:2.5mm; letter-spacing:.05em;
+}
+.sec-bar small{font-size:7.8pt; font-weight:700; opacity:.95; margin-left:auto; letter-spacing:0;}
+.bar-green{background:var(--green);}
+.bar-teal{background:var(--teal);}
+.bar-orange{background:var(--orange); color:var(--brown);}
+
+/* steps */
+.steps{display:flex; gap:1.5mm; align-items:stretch;}
+.step{
+  flex:1; background:var(--paper); border:.6mm solid var(--brown); border-radius:3mm;
+  padding:2.4mm 2.8mm; display:flex; flex-direction:column; gap:1.2mm;
+}
+.step .top{display:flex; align-items:center; gap:1.8mm;}
 .step .n{
-  flex:none; width:4.6mm; height:4.6mm; border-radius:50%;
-  background:var(--brown); color:var(--cream); font-size:8.5px; font-weight:900;
-  display:grid; place-items:center; margin-top:.4mm;
+  flex:none; width:6mm; height:6mm; border-radius:50%; background:var(--green); color:#fff;
+  display:grid; place-items:center; font-family:DotGothic16,monospace; font-size:9.5pt;
 }
-.step p{font-size:9.9px; font-weight:700; line-height:1.55;}
+.step h3{font-size:9pt; font-weight:900; line-height:1.2; white-space:nowrap;}
+.step p{font-size:7.8pt; line-height:1.5; font-weight:500;}
+.step b{font-weight:900;}
+.step-arrow{align-self:center; font-size:10pt; font-weight:900; color:var(--brown); flex:none;}
 
-/* goal flow (horizontal) */
-.gflow{display:flex; align-items:stretch; gap:1.4mm; margin-top:.6mm;}
-.gstep{
-  flex:1; background:var(--cream); border:1.8px solid var(--brown); border-radius:2mm;
-  padding:1.4mm 1.8mm; font-size:8.9px; font-weight:700; line-height:1.45; text-align:center;
+/* tools */
+.tools{display:flex; gap:3mm; flex:1;}
+.tools .col{flex:1; display:flex; flex-direction:column; gap:3mm;}
+.box{background:var(--paper); border:.6mm solid var(--brown); border-radius:3mm; padding:2.8mm 3.2mm;}
+.box.grow{flex:1; display:flex; flex-direction:column; justify-content:space-between;}
+.box.grow .sq-row{margin-bottom:0;}
+.box h2{
+  font-size:10pt; font-weight:900; margin-bottom:1.6mm; display:flex; align-items:center; gap:1.5mm;
+  border-bottom:.4mm dashed rgba(74,58,48,.35); padding-bottom:1.2mm;
 }
-.gstep b{display:block; font-size:9.8px;}
-.garrow{align-self:center; font-size:10px; font-weight:900; flex:none;}
+.box p, .box li{font-size:8.4pt; line-height:1.55; font-weight:500;}
+.box b{font-weight:900;}
+.box ul{padding-left:4.5mm;}
+.box li{margin-bottom:.3mm;}
+.note{font-size:7.8pt; opacity:.75; margin-top:1mm;}
 
-/* ---------- key pills ---------- */
-.keyline{display:flex; gap:1.6mm; flex-wrap:wrap; margin:1mm 0;}
-.key{
-  border:1.8px solid var(--brown); border-radius:999px; background:var(--cream);
-  font-size:9.3px; font-weight:900; padding:.7mm 2.6mm;
+/* squares rows */
+.sq-row{display:flex; align-items:flex-start; gap:2mm; margin-bottom:1.6mm;}
+.sq-row:last-child{margin-bottom:0;}
+.sq-tag{
+  flex:none; width:20mm; text-align:center; border-radius:2mm; border:.5mm solid var(--brown);
+  font-size:8.4pt; font-weight:900; padding:.9mm 0;
 }
+.sq-row p{flex:1; font-size:8.4pt; line-height:1.5;}
+.t-income{background:#EDF7DC;} .t-cost{background:#FFE9E7;} .t-event{background:#FFF3DC;}
+.t-learn{background:#E0F4F8;} .t-door{background:var(--brown); color:var(--cream); border-color:var(--orange);}
 
-/* ---------- facilitator ---------- */
-.faci{
-  border:2px dashed var(--brown); border-radius:3mm; background:rgba(255,255,255,.75);
-  padding:2.4mm 3.2mm; break-inside:avoid;
+/* door age chips */
+.door-ages{display:flex; flex-wrap:wrap; gap:1.2mm; margin-top:1.2mm;}
+.door-ages span{
+  border:.4mm solid var(--brown); background:var(--cream); border-radius:99mm;
+  padding:.5mm 2.6mm; font-size:7.8pt; font-weight:900; white-space:nowrap;
 }
-.faci h2{font-size:11.5px; font-weight:900; margin-bottom:1.2mm;}
-.faci .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:1.2mm 4mm;}
-.faci p{font-size:9.1px; font-weight:700; line-height:1.55; display:flex; gap:1.4mm;}
-.faci p .ic{flex:none;}
+.door-ages span i{font-style:normal; font-family:DotGothic16,monospace; margin-right:.6mm;}
 
-footer{
-  font-size:7.8px; font-weight:700; opacity:.65; text-align:center; letter-spacing:.04em;
-  margin-top:auto;
+.kv{display:flex; gap:1.5mm; flex-wrap:wrap; margin-top:1.4mm;}
+.kv span{border:.4mm solid var(--brown); background:var(--cream); border-radius:99mm; padding:.5mm 2.8mm; font-size:7.8pt; font-weight:900;}
+.kv .minus{color:#d24a3c; border-color:#d24a3c; background:var(--paper);}
+.kv .plus{color:#5a9114; border-color:#5a9114; background:var(--paper);}
+
+/* scholarship mini rows */
+.loan-row{display:flex; align-items:flex-start; gap:2mm; margin-bottom:1.4mm;}
+.loan-row:last-child{margin-bottom:0;}
+.loan-tag{
+  flex:none; width:16mm; text-align:center; border-radius:2mm; border:.5mm solid var(--brown);
+  font-size:7.8pt; font-weight:900; padding:.8mm 0;
 }
+.l-kashiyo{background:#FFE9E7;} .l-kyufu{background:#EDF7DC;}
+.loan-row p{flex:1; font-size:8.4pt; line-height:1.5;}
+
+/* result row */
+.result-row{display:flex; gap:3mm;}
+.result-row .box{flex:1;}
+.result-row .box.wide{flex:2;}
+
+/* facilitator memo */
+.faci-band{
+  background:var(--paper); border:.5mm dashed var(--brown); border-radius:3mm;
+  padding:1.6mm 4mm; font-size:8.2pt; font-weight:500; line-height:1.55;
+}
+.faci-band b{font-weight:900;}
+
+/* footer */
+.foot{
+  background:var(--brown); color:var(--cream); border-radius:3mm; padding:2.5mm 5mm;
+  font-size:8.4pt; font-weight:700; line-height:1.6;
+}
+.foot b{color:var(--orange);}
 </style>
 </head>
 <body>
 <div class="sheet">
 
-  <header>
-    <div class="mini-door" aria-hidden="true"><div class="leaf"></div><div class="knob"></div></div>
-    <div class="h-main">
-      <h1>TOBIRA <small>World</small>　<span style="font-size:14px">How to Play</span></h1>
-      <p class="sub">A life board game of money and choices: you are born somewhere in the world and live 29 years, from age 6 to 35.<br>
-      You don't choose where you're born. Same dice, same board for everyone — but <b>what each player can see is different</b>. You'll find out why after the game.</p>
+  <div class="head">
+    <div class="door-mark"><span></span></div>
+    <div>
+      <h1>TOBIRA <span class="edition">🌍 World</span></h1>
+      <div class="sub">A life board game of money and choices</div>
     </div>
-    <div class="h-badges">
-      <span class="badge acc">👥 2–6 players</span>
-      <span class="badge">⏱ ~25 min + reflection</span>
-      <span class="badge">🖥 one shared screen</span>
-    </div>
-  </header>
-
-  <div class="cols">
-    <!-- ==== left column ==== -->
-    <div class="col">
-
-      <section class="card">
-        <h2>🎒 What you need</h2>
-        <ul>
-          <li><span class="ic">🖥</span><span>One <b>computer or tablet</b> with a browser (a screen big enough for everyone works best). Open the game page and you're ready.</span></li>
-          <li><span class="ic">🙌</span><span><b>2–6 players</b>. Tokens and money live on the screen — no extra pieces needed.</span></li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <h2>🏁 The goal</h2>
-        <p>The ranking isn't decided by money, but by <b class="hl">♥ Happiness</b>.<br>
-        You earn ♥ by opening life's <b>Doors</b>. In other words,<br>
-        <b class="hl">♥ = how often you chose with your own will</b>. Money and ★ Learning are the keys that make it possible.</p>
-      </section>
-
-      <section class="card">
-        <h2>🏠 Getting started <span class="tag">IMPORTANT</span></h2>
-        <div class="flow">
-          <div class="step"><span class="n">1</span><p>Enter your names and press <b>START!</b></p></div>
-          <div class="step"><span class="n">2</span><p>One at a time, secretly flip your <b>Family Card</b>. It shows where you're born, your starting money, base pay, and your strength.</p></div>
-          <div class="step"><span class="n">3</span><p><b>Don't show it to anyone!</b> What family you were born into stays a secret until the end.</p></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>🔁 On your turn</h2>
-        <div class="flow">
-          <div class="step"><span class="n">1</span><p><b>Roll the dice</b> (just press the button).</p></div>
-          <div class="step"><span class="n">2</span><p>Your token moves that many squares.</p></div>
-          <div class="step"><span class="n">3</span><p>Follow the square you land on. When choices appear, <b>read them aloud and discuss with the table if you like</b> — but the decision is yours!</p></div>
-          <div class="step"><span class="n">4</span><p>Then it's the next player's turn. Repeat until everyone reaches the goal.</p></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>🧒 Childhood rule (age 6–15)</h2>
-        <p>The first few squares use <b>no dice</b>. Press "🧒 Step forward" to move <b>one square at a time</b>, stopping on every square.<br>
-        These are the years that build the base of a life.</p>
-      </section>
-
-    </div>
-
-    <!-- ==== right column ==== -->
-    <div class="col">
-
-      <section class="card">
-        <h2>🎲 The squares</h2>
-        <div class="sq-table">
-          <div class="sq-row"><span class="sq-chip sq-income"><span class="i">💰</span>Work</span><p>You get paid: <b>base pay + ★ Learning × rate</b>. As ★ grows, your job and pay change too.</p></div>
-          <div class="sq-row"><span class="sq-chip sq-cost"><span class="i">💸</span>Expense</span><p>School supplies, medical bills — living costs money.</p></div>
-          <div class="sq-row"><span class="sq-chip sq-event"><span class="i">⚡</span>Event</span><p>Luck and accidents. Sometimes <b>important information</b> comes your way.</p></div>
-          <div class="sq-row"><span class="sq-chip sq-learn"><span class="i">📚</span>Learning</span><p>A chance to grow ★ Learning. Pay for it — or learn for free?</p></div>
-          <div class="sq-row"><span class="sq-chip sq-choice"><span class="i">🚪</span>Door</span><p>The glowing brown squares. <b>A life choice arrives</b> — opening one can earn ♥.</p></div>
-          <div class="sq-row"><span class="sq-chip" style="width:auto; padding:.8mm 2mm"><span class="i">🌱🏁</span>Start · Goal</span><p>Born at 6, goal at 35.</p></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>🚪 Doors &amp; keys</h2>
-        <p>Landing on a Door square shows several options. The good ones often need "keys".</p>
-        <div class="keyline">
-          <span class="key">🔑 Keys = 💰 Money · ★ Learning</span>
-          <span class="key">🔒 Not enough? It won't open</span>
-        </div>
-        <ul>
-          <li><span class="ic">📚</span><span><b>★ Learning is a future key</b> — it opens doors and raises your pay.</span></li>
-          <li><span class="ic">👁</span><span>You may meet options shown only as "<b>？？？</b>" — <b>invisible choices</b>. What they really are… you'll find out after the game.</span></li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <h2>🏆 When everyone finishes <span class="tag" style="background:var(--crimson); white-space:nowrap">PLAY TO THE END</span></h2>
-        <div class="gflow">
-          <div class="gstep"><b>🎉 Results</b>ranking by ♥</div>
-          <span class="garrow">→</span>
-          <div class="gstep"><b>🚪 The Reveal</b>Family Cards &amp; every ？？？ made public</div>
-          <span class="garrow">→</span>
-          <div class="gstep"><b>🗣 Reflection</b>talk about what you felt</div>
-        </div>
-        <p style="margin-top:1.4mm">Don't stop at the ranking — <b class="hl">one game runs all the way through reflection time</b>. Same board, so why did our lives turn out so different? Use the "Talk about it" questions on screen.</p>
-      </section>
-
+    <div class="meta">
+      <span class="chip">👥 2–6 players</span>
+      <span class="chip">⏱ ~25 min</span>
+      <span class="chip">📱 one shared screen</span>
     </div>
   </div>
 
-  <!-- ==== facilitator ==== -->
-  <section class="faci">
-    <h2>👩‍🏫 For facilitators (teachers &amp; hosts)</h2>
-    <div class="fgrid">
-      <p><span class="ic">⚠️</span><span>The start screen has a setting to include <b>heavy life events</b> (loss, disaster). Switch it on or off to suit your group — it starts OFF.</span></p>
-      <p><span class="ic">🤫</span><span>Make sure each Family Card is seen <b>by its owner only</b>. If asked what "？？？" means, we recommend <b>not revealing it until everyone finishes</b>.</span></p>
-      <p><span class="ic">🗣</span><span>Plan 10–15 minutes for reflection. "Was it really about effort?" and "Why couldn't some doors be seen?" make strong anchors.</span></p>
-      <p><span class="ic">🌐</span><span>The title screen switches between <b>日本語 and English</b>, so mixed-language groups can play as they are.</span></p>
-    </div>
-  </section>
+  <div class="goal-band">
+    🏆 The ranking isn't decided by money, but by <b>♥ Happiness</b>.<br>
+    ♥ = <b>how often you chose with your own will</b>. Money and ★ Learning are the "keys" that make it possible.
+  </div>
 
-  <footer>TOBIRA World — an educational board game / this manual prints on a single A4 page</footer>
+  <div class="why-band">
+    ❓ <b>Why age 6 to 35?</b> — Because the base of a life is built in <b>childhood</b>. You <b>don't choose where you're born</b>. Same dice, same board for everyone — yet <b>what each player can see</b> is different. You'll find out why after the game.
+  </div>
+
+  <!-- ═══ how to play ═══ -->
+  <div class="sec-bar bar-green">🎲 How the game flows<small>from start to goal, in 4 steps</small></div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="top"><span class="n">1</span><h3>🏠 Family Card</h3></div>
+      <p>Enter names, press <b>START</b>. Check your Family Card <b>secretly</b></p>
+    </div>
+    <div class="step-arrow">▶</div>
+    <div class="step">
+      <div class="top"><span class="n">2</span><h3>🧒 Childhood</h3></div>
+      <p><b>Age 6–15</b>: no dice — <b>one square at a time</b>, building your base</p>
+    </div>
+    <div class="step-arrow">▶</div>
+    <div class="step">
+      <div class="top"><span class="n">3</span><h3>🎲 Roll the dice</h3></div>
+      <p>From the <b>School Door at 15</b>, tap the <b>dice</b> to move</p>
+    </div>
+    <div class="step-arrow">▶</div>
+    <div class="step">
+      <div class="top"><span class="n">4</span><h3>🏁 Goal at 35</h3></div>
+      <p>Everyone in: <b>results!</b> Ranking by <b>♥</b> (ties: money left)</p>
+    </div>
+  </div>
+
+  <!-- ═══ tools ═══ -->
+  <div class="sec-bar bar-teal">🧰 The game's tools<small>the squares and systems on screen</small></div>
+
+  <div class="tools">
+    <div class="col">
+      <div class="box grow">
+        <h2>🗺 The squares</h2>
+        <div class="sq-row"><span class="sq-tag t-income">💰 Work</span><p>You get paid: <b>base pay + ★ × rate</b> + allowance. <b>Base pay and rate depend on where you were born…!</b></p></div>
+        <div class="sq-row"><span class="sq-tag t-cost">💸 Expense</span><p>Living costs money. Pay the amount shown</p></div>
+        <div class="sq-row"><span class="sq-tag t-event">⚡ Event</span><p>Luck and accidents — sometimes <b>important information</b></p></div>
+        <div class="sq-row"><span class="sq-tag t-learn">📚 Learning</span><p><b>Collect ★ Learning</b> — by paying, or for free</p></div>
+        <div class="sq-row"><span class="sq-tag t-door">🚪 Door</span><p><b>Glowing square = a fork in life</b>. Nine of them in 29 years</p></div>
+        <div class="door-ages">
+          <span><i>15</i>School</span><span><i>18</i>Home</span><span><i>19</i>Town</span>
+          <span><i>21</i>Skills</span><span><i>24</i>Career</span><span><i>26</i>Abroad</span>
+          <span><i>28</i>Relearn</span><span><i>29</i>Challenge</span><span><i>32</i>Big dream</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="box grow">
+        <h2>🔑 Doors &amp; keys</h2>
+        <ul>
+          <li>Choosing at a glowing Door earns <b>♥ Happiness</b></li>
+          <li>Good options need <b>keys</b> (money / ★ Learning). Not&nbsp;enough&nbsp;→&nbsp;🔒</li>
+          <li>Depending on your family, some options show only as <b>"？？？" — invisible</b></li>
+          <li>A no-key (¥0) path <b>can always be chosen, even in debt</b></li>
+          <li><b>★ and ♥ stay hidden until you choose</b> — you see the price, not the value</li>
+        </ul>
+        <div class="kv"><span>Key: ¥1,500k</span><span class="minus">💸 Money −¥300k</span><span class="plus">💰 Money +¥800k</span></div>
+      </div>
+
+      <div class="box">
+        <h2>🎓 Scholarships</h2>
+        <div class="loan-row"><span class="loan-tag l-kashiyo">Loan</span><p>Borrow ¥480k total. <b>−¥60k</b> each payday; the rest is <b>settled at the goal, age 35</b></p></div>
+        <div class="loan-row"><span class="loan-tag l-kyufu">Grant</span><p>Only found by <b>those who know support exists</b>. <b>Never repaid</b></p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ results ═══ -->
+  <div class="sec-bar bar-orange">🎉 Results &amp; reflection<small>this is where it really begins!</small></div>
+
+  <div class="result-row">
+    <div class="box">
+      <h2>📢 The Reveal</h2>
+      <ul>
+        <li><b>Family Cards go public</b> — ？？？ included</li>
+        <li><b>Every door of the 29 years</b>, listed</li>
+      </ul>
+      <p class="note">👩‍🏫 <b>Facilitators</b>: ⚠️ toggle = heavy events (default OFF). Keep ？？？ secret until the goal. 日本語 available.</p>
+    </div>
+    <div class="box wide">
+      <h2>🗣 Talk about it</h2>
+      <ul>
+        <li>Same square, same ★, different pay — was that <b>effort</b>?</li>
+        <li>What was <b>the other key</b> that made learning bear fruit?</li>
+        <li>Which doors <b>couldn't you see</b>? What <b>strengths</b> did you have?</li>
+        <li>What <b>"keys"</b> could we hand to children around the world?</li>
+      </ul>
+      <p class="note">Where you're born shapes your chances. That's why support systems exist — and <b>knowing about them is the first step</b>. This game is a door into that.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    💡 The most important thing in this game — lacking the key to a door, and <b>not even knowing the door exists</b>, are completely different.
+    When the game ends, please talk about the doors you never saw.
+  </div>
 
 </div>
 </body>
