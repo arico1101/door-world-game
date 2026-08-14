@@ -347,7 +347,10 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   <div class="topbar">
     <div class="logo" id="logoTxt">🌍 トビラ せかい版</div>
     <div class="turn-pill" id="turnPill"></div>
-    <button class="help-btn" id="helpBtnGame" aria-label="あそびかた">？</button>
+    <div style="display:flex; gap:8px">
+      <button class="help-btn" id="helpBtnGame" aria-label="how to play">？</button>
+      <button class="help-btn" id="homeBtn" aria-label="back to title">🏠</button>
+    </div>
   </div>
   <div class="players-strip" id="playersStrip"></div>
   <div class="board-wrap"><div class="board" id="board"></div></div>
@@ -1569,6 +1572,19 @@ function renderRules(page){
 $("helpBtnSetup").onclick = ()=>renderRules(0);
 $("helpBtnGame").onclick = ()=>{
   if(!$("overlay").classList.contains("open")) renderRules(0);
+};
+/* タイトルにもどる（確認つき） */
+$("homeBtn").onclick = ()=>{
+  if($("overlay").classList.contains("open")) return;
+  const ja = lang === "ja";
+  openModal(`
+    <span class="m-tag" style="background:var(--brown)">🏠 ${ja ? "タイトルにもどる" : "Back to title"}</span>
+    <h2>${ja ? "ゲームをやめて、タイトルにもどる？" : "Quit this game and return to the title?"}</h2>
+    <p class="m-body">${ja ? "いまのゲームの記録は消えます。" : "The current game will be lost."}</p>
+    <button class="m-btn" id="mQuit">${ja ? "タイトルにもどる" : "Back to title"}</button>
+    <button class="m-btn ghost" id="mStay" style="margin-top:10px; background:var(--paper); color:var(--brown); border:2px solid var(--brown); box-shadow:var(--shadow)">${ja ? "つづける" : "Keep playing"}</button>`);
+  $("mQuit").onclick = ()=>{ closeModal(); showScreen("setup"); initSetup(); applyLang(); };
+  $("mStay").onclick = closeModal;
 };
 
 initSetup();
