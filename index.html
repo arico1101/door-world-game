@@ -555,7 +555,7 @@ function choiceDef(key, p){
       title:{ja:"進学のトビラ",en:"The School Door"}, body:{ja:"学校を卒業。ここから先の道を選ぼう。",en:"You finished school. Choose your next path."},
       opts:[
         {t:{ja:"上の学校へ進学する（自費）",en:"Continue to higher education (self-funded)"}, d:{ja:"学費を家のお金で払ってまなぶ。世界がひろがる",en:"Your family pays the fees. The world opens up"}, req:{money:150}, fx:{money:-150, learn:3, happy:1}},
-        {t:{ja:"奨学金・支援団体の力で進学する",en:"Continue with a scholarship / aid group"}, d:{ja:"はたらきはじめたら、すこしずつ返す。支援を知っていれば、返さなくていい奨学金に出会えることも",en:"You repay bit by bit once you work. If you know the right support, you may find a scholarship you never repay"}, tag:"shien", req:{}, fx:{money:-30, learn:3, happy:1}, special:"shogakukin"},
+        {t:{ja:"奨学金・支援団体の力で進学する",en:"Continue with a scholarship / aid group"}, d:{ja:"はたらきはじめたら、すこしずつ返す。支援を知っていれば、返さなくていい奨学金に出会えることも",en:"You repay bit by bit once you work. If you know the right support, you may find a scholarship you never repay"}, tag:"shien", req:{maxMoney:150}, fx:{money:-30, learn:3, happy:1}, special:"shogakukin"},
         {t:{ja:"働いて家族を支える",en:"Work to support your family"}, d:{ja:"畑や店で働き、現場で経験を積む",en:"Field or shop — you learn on the job"}, req:{}, fx:{money:80, learn:1}},
       ]};
     case "kurashi":
@@ -1269,12 +1269,16 @@ function reqLabel(p, o){
   if(o.req.learn){
     parts.push(`${ja?"まなび":"Learn"} ★${el}` + (el < o.req.learn ? (ja ? "（🗣英語ネイティブで−2）" : "（🗣native English −2）") : ""));
   }
+  if(o.req.maxMoney != null){
+    parts.push(ja ? `所得制限 おかね${fm(o.req.maxMoney)}未満` : `Income limit: under ${fm(o.req.maxMoney)}`);
+  }
   return parts.join(" ＋ ");
 }
 function meetsReq(p, o){
   const em = effectiveMoneyReq(p, o);
   if(em > 0 && em > p.money) return false;  /* カギなし(0円)の選択肢は借金中でも選べる */
   if(effectiveLearnReq(p, o) > p.learn) return false;
+  if(o.req.maxMoney != null && p.money >= o.req.maxMoney) return false;  /* 所得制限 */
   return true;
 }
 
@@ -1326,7 +1330,7 @@ function showChoiceModal(idx, def, type, skipCount){
       <span class="d-main">
         <span class="d-title">${L(o.t)}</span>
         <span class="d-desc">${L(o.d)}</span>
-        ${key?`<span class="d-key">${lang==="ja"?"カギ：":"Key: "}${key}${ok?"":(lang==="ja"?"（たりない…）":" (not enough…)")}</span>`:""}${cost}
+        ${key?`<span class="d-key">${lang==="ja"?"カギ：":"Key: "}${key}${ok?"":(o.req.maxMoney != null && p.money >= o.req.maxMoney ? (lang==="ja"?"（対象外…）":" (not eligible…)") : (lang==="ja"?"（たりない…）":" (not enough…)"))}</span>`:""}${cost}
       </span>
     </button>`;
   }).join("");
@@ -1569,6 +1573,7 @@ function rawReqLabel(o){
   const parts = [];
   if(o.req.money) parts.push(`${lang==="ja"?"おかね":"Money "}${fm(o.req.money)}`);
   if(o.req.learn) parts.push(`★${o.req.learn}`);
+  if(o.req.maxMoney != null) parts.push(lang==="ja" ? `所得制限おかね${fm(o.req.maxMoney)}未満` : `income limit: under ${fm(o.req.maxMoney)}`);
   return parts.join("＋");
 }
 function fxInline(fx){
