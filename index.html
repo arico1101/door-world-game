@@ -69,6 +69,22 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 
 /* ---------- game ---------- */
 #game{padding:12px 12px 120px;}
+/* 手番と持ち情報は、盤面のどこにいても見えるように画面上部へ固定 */
+.sticky-head{
+  position:sticky; top:0; z-index:40; background:var(--cream);
+  margin:-12px -12px 8px; padding:12px 12px 6px;
+  box-shadow:0 8px 10px -8px rgba(74,58,48,.35);
+}
+.sticky-head .players-strip{margin-bottom:0;}
+@media (max-width:520px){
+  .sticky-head .pcard{padding:6px 8px; font-size:11px;}
+  .sticky-head .pcard .nm{font-size:12.5px; margin-bottom:2px;}
+  .topbar{gap:6px; margin-bottom:8px;}
+  .topbar .logo{font-size:14px; white-space:nowrap;}
+  .turn-pill{padding:6px 12px; font-size:13px; white-space:nowrap;}
+  .help-btn{width:32px; height:32px; font-size:15px;}
+}
+@media (max-width:430px){ .topbar .logo{display:none;} }
 .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:1100px; margin:0 auto 10px;}
 .topbar .logo{font-weight:900; font-size:18px; letter-spacing:.1em;}
 .turn-pill{
@@ -107,6 +123,10 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 }
 .chapter::after{content:""; flex:1; height:2px; background:rgba(74,58,48,.15); border-radius:2px;}
 .ch-note{font-size:10.5px; font-weight:700; opacity:.8; background:var(--paper); border:1.5px solid rgba(74,58,48,.3); border-radius:999px; padding:2px 10px;}
+/* 蛇行して進むので、行ごとの進行方向と折り返しを示す */
+.ch-dir{font-size:10.5px; font-weight:900; color:var(--green); letter-spacing:.1em; white-space:nowrap;}
+.turn-mark{position:absolute; right:4px; bottom:2px; font-size:13px; font-weight:900; opacity:.5;}
+.sq.t-choice .turn-mark{color:var(--orange); opacity:.9;}
 .sq .ic{font-size:clamp(14px,2.4vw,22px); line-height:1;}
 .sq.t-income{background:#EDF7DC; border-color:var(--green);}
 .sq.t-cost{background:#FFE9E7; border-color:var(--crimson);}
@@ -262,6 +282,7 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 .d-key.d-cost.minus{color:#d24a3c; border:1.5px solid #d24a3c;}
 .d-key.d-cost.plus{color:#5a9114; border:1.5px solid #5a9114;}
 .door:disabled:not(.unseen) .d-key.d-cost{background:var(--paper);}
+.d-key.d-cost s{opacity:.55; margin-right:2px; font-weight:700;}
 .m-btn{
   display:block; margin:8px auto 0; background:var(--brown); color:var(--cream);
   font-size:17px; font-weight:900; padding:13px 42px; border-radius:999px;
@@ -361,15 +382,17 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 
 <!-- ========== GAME ========== -->
 <section id="game" class="screen">
-  <div class="topbar">
-    <div class="logo" id="logoTxt">🌍 トビラ せかい版</div>
-    <div class="turn-pill" id="turnPill"></div>
-    <div style="display:flex; gap:8px">
-      <button class="help-btn" id="helpBtnGame" aria-label="how to play">？</button>
-      <button class="help-btn" id="homeBtn" aria-label="back to title">🏠</button>
+  <div class="sticky-head">
+    <div class="topbar">
+      <div class="logo" id="logoTxt">🌍 トビラ せかい版</div>
+      <div class="turn-pill" id="turnPill"></div>
+      <div style="display:flex; gap:8px">
+        <button class="help-btn" id="helpBtnGame" aria-label="how to play">？</button>
+        <button class="help-btn" id="homeBtn" aria-label="back to title">🏠</button>
+      </div>
     </div>
+    <div class="players-strip" id="playersStrip"></div>
   </div>
-  <div class="players-strip" id="playersStrip"></div>
   <div class="board-wrap"><div class="board" id="board"></div></div>
   <div class="controls">
     <button class="dice-btn" id="diceBtn">
@@ -842,7 +865,10 @@ function renderBoard(){
     lab.className = "chapter";
     lab.style.gridRow = r*2+1;
     lab.style.gridColumn = "1 / -1";
-    lab.innerHTML = L(c.t) + (c.note ? `<span class="ch-note">${L(c.note)}</span>` : "");
+    lab.innerHTML = L(c.t) + (c.note ? `<span class="ch-note">${L(c.note)}</span>` : "")
+      + `<span class="ch-dir">${r % 2 === 0
+          ? (lang==="ja" ? "みぎへ ▶" : "right ▶")
+          : (lang==="ja" ? "◀ ひだりへ" : "◀ left")}</span>`;
     b.appendChild(lab);
   });
   SQUARES.forEach((sq,i)=>{
@@ -853,7 +879,8 @@ function renderBoard(){
     const {row,col} = gridPos(i);
     el.style.gridRow = row*2+2; el.style.gridColumn = col+1;
     const ageLabel = (sq.t === "choice" || sq.t === "start" || sq.t === "goal") ? `<span class="num">${lang==="ja" ? AGES[i]+"歳" : AGES[i]}</span>` : "";
-    el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${L(sq.name) || L(m.label)}</span><div class="tokens"></div>`;
+    const turnMark = (i % 6 === 5 && i < SQUARES.length-1) ? `<span class="turn-mark">↓</span>` : "";
+    el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${L(sq.name) || L(m.label)}</span>${turnMark}<div class="tokens"></div>`;
     b.appendChild(el);
   });
 }
@@ -890,13 +917,33 @@ function updateTurnUI(){
   const p = players[turn];
   $("turnPill").innerHTML = `<span class="p-dot" style="background:${p.color}"></span>${lang==="ja" ? `${p.name} さんの番・${AGES[p.pos]}歳` : `${p.name}'s turn · Age ${AGES[p.pos]}`}`;
   renderStrip(); renderTokens();
+  /* 縦スクロールを起こさないよう、プレイヤー一覧だけ横に動かす */
   const card = $(`pcard-${turn}`);
-  if(card) card.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+  const strip = $("playersStrip");
+  if(card && strip){
+    const cr = card.getBoundingClientRect(), sr = strip.getBoundingClientRect();
+    strip.scrollTo({left: strip.scrollLeft + (cr.left - sr.left) - (strip.clientWidth - cr.width)/2, behavior:"smooth"});
+  }
 }
 
 /* ===================== turn flow ===================== */
+/* 手番プレイヤーのマスが見えるように画面を追従させる */
+function focusSquare(pos){
+  const el = $(`sq-${pos}`);
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  const wrap = document.querySelector(".board-wrap");
+  if(wrap){
+    const wr = wrap.getBoundingClientRect();
+    const x = wrap.scrollLeft + (r.left - wr.left) - (wrap.clientWidth - r.width) / 2;
+    wrap.scrollTo({left: Math.max(0, x), behavior:"auto"});
+  }
+  const y = el.getBoundingClientRect().top + window.scrollY - (window.innerHeight - r.height) / 2;
+  window.scrollTo({top: Math.max(0, y), behavior:"smooth"});
+}
 function beginTurn(){
   updateTurnUI();
+  focusSquare(players[turn].pos);
   const p = players[turn];
   if(p.letterIn !== null){
     p.letterIn--;
@@ -953,6 +1000,7 @@ async function movePlayer(idx, steps){
   while(p.pos < target){
     p.pos++;
     renderTokens();
+    focusSquare(p.pos);
     const tk = $(`tok-${idx}`);
     if(tk) tk.classList.add("hop");
     await wait(230);
@@ -1194,6 +1242,15 @@ function effectiveMoneyReq(p, o){
   if(p.perk === "kokusai" && o.tag === "global") m = Math.max(0, m - 50);
   return m;
 }
+/* 🎗支援サポート・🌏国際感覚は、カギ（必要額）だけでなく、はらうお金も軽くする */
+function effectiveMoneyFx(p, o){
+  const m = o.fx.money || 0;
+  if(m >= 0) return m;
+  let cut = 0;
+  if(p.shienDiscount && (o.tag === "shien" || o.tag === "manabi")) cut += 50;
+  if(p.perk === "kokusai" && o.tag === "global") cut += 50;
+  return cut ? Math.min(0, m + cut) : m;
+}
 function effectiveLearnReq(p, o){
   let l = o.req.learn || 0;
   if(p.perk === "eigo" && o.tag === "global") l = Math.max(0, l - 2);
@@ -1238,7 +1295,10 @@ function showChoiceModal(idx, def, type, skipCount){
     });
     p.doorLog.push(logEntry);
   }
-  const doors = def.opts.map((o,i)=>{
+  /* 表示順はシャッフルする（いつも一番上＝高額、で無思考に選ばれるのを防ぐ）。
+     data-i は元の並びのままなので、記録や一覧の集計はずれない */
+  const doors = shuffle(def.opts.map((_,i)=>i)).map(i=>{
+    const o = def.opts[i];
     const st = states[i];
     if(st === "unseen"){
       return `<button class="door unseen" disabled>
@@ -1251,9 +1311,16 @@ function showChoiceModal(idx, def, type, skipCount){
     }
     const key = reqLabel(p, o);
     const ok = st === "open";
-    /* お金の増減だけは選ぶ前に見せる（★とハートは選ぶまでのお楽しみ） */
-    const cost = o.fx.money
-      ? `<span class="d-key d-cost ${o.fx.money<0?"minus":"plus"}">${o.fx.money<0?"💸":"💰"} ${lang==="ja"?"おかね":"Money"} ${o.fx.money>0?"+":""}${fm(o.fx.money)}${o.special==="shogakukin" ? (lang==="ja"?"＋返済":" + repayment") : ""}</span>`
+    /* お金の増減だけは選ぶ前に見せる（★とハートは選ぶまでのお楽しみ）
+       カギの金額と支払い額が同じときはカギ表示だけにする（冗長回避） */
+    const em = effectiveMoneyReq(p, o);
+    const raw = o.fx.money || 0;
+    const efx = effectiveMoneyFx(p, o);
+    const cut = efx !== raw;                        // サポートで安くなった
+    const redundant = o.req.money && efx === -em;   // カギ表示と同じ額なら出さない
+    const loan = o.special === "shogakukin" && !(p.shienDiscount || p.perk === "shienPro");
+    const cost = ((efx || cut) && !redundant)
+      ? `<span class="d-key d-cost ${efx<0?"minus":"plus"}">${cut?"🎗":(efx<0?"💸":"💰")} ${lang==="ja"?"おかね":"Money"} ${cut?`<s>${fm(raw)}</s>→`:""}${efx>0?"+":""}${fm(efx)}${loan ? (lang==="ja"?"＋返済":" + repayment") : ""}</span>`
       : "";
     return `<button class="door" data-i="${i}" ${ok?"":"disabled"}>
       <span class="d-icon">${ok?"🚪":"🔒"}</span>
@@ -1284,6 +1351,14 @@ function showChoiceModal(idx, def, type, skipCount){
       const fx = {...o.fx};
       const notes = [];
       const ja = lang === "ja";
+      /* サポートは、はらうお金にも効く */
+      if(fx.money){
+        fx.money = effectiveMoneyFx(p, o);
+        if(fx.money !== o.fx.money && o.special !== "shogakukin"){
+          notes.push(ja ? `🎗 サポートのおかげで、はらうお金が <b>${fm(o.fx.money)} → ${fm(fx.money)}</b> に軽くなった。`
+                        : `🎗 Thanks to the support, what you pay drops from <b>${fm(o.fx.money)} to ${fm(fx.money)}</b>.`);
+        }
+      }
       if(o.special === "revealAll" && p.hidden.size > 0){
         p.hidden.clear();
         notes.push(ja ? "👁 いままで見えていなかった選択肢が、ぜんぶ見えるようになった！" : "👁 Every hidden option is now visible!");
@@ -1297,7 +1372,8 @@ function showChoiceModal(idx, def, type, skipCount){
       if(o.special === "shienSupport"){
         p.shienDiscount = true;
         p.hidden.delete("shien");
-        notes.push(ja ? "🎗 これから先、支援・まなび系のトビラのカギが <b>−50万</b> になる。" : `🎗 From now on, aid/learning door keys cost <b>−${fm(50)}</b>.`);
+        notes.push(ja ? "🎗 これから先、支援・まなび系のトビラが <b>最大50万ぶん安くなる</b>。カギ（必要なお金）も、じっさいにはらうお金も。"
+                      : `🎗 From now on, aid/learning doors cost up to <b>${fm(50)} less</b> — both the key you need and the money you actually pay.`);
         const dn = checkDeai(p); if(dn) notes.push(dn);
       }
       if(o.special === "letter"){
@@ -1629,9 +1705,10 @@ const RULE_PAGES = [
     ["🚪",{ja:"♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。<b>♥の数＝じぶんの意思で選べた数</b>だ。",en:"You earn ♥ by opening life's <b>Doors</b>. <b>♥ = how often you chose with your own will.</b>"}],
   ]},
   {tag:{ja:"🚪 トビラとカギ",en:"🚪 Doors & keys"}, title:{ja:"いい選択には「カギ」がいる",en:"Good choices need keys"}, items:[
-    ["🚪",{ja:"茶色い<b>トビラのマス</b>に止まると、人生の選択がやってくる。",en:"Land on a brown <b>Door square</b> and a life choice arrives."}],
+    ["🚪",{ja:"<b>光るトビラのマス</b>に止まると、人生の選択がやってくる。",en:"Land on a <b>glowing Door square</b> and a life choice arrives."}],
     ["🔑",{ja:"選択肢には<b>カギ</b>（必要な💰おかね・★まなび）があるものも。",en:"Some options have <b>keys</b> — 💰money or ★learning you must have."}],
     ["🔒",{ja:"カギが足りないと、そのトビラは開けられない…！",en:"Without the keys, that door won't open…!"}],
+    ["🗣",{ja:"えらぶ前に、<b>「なぜそれを選ぶのか」をひとこと</b>みんなに話してから決めよう。",en:"Before you choose, <b>say out loud why</b> you're choosing it."}],
   ]},
   {tag:{ja:"📚 まなびとおかね",en:"📚 Learning & money"}, title:{ja:"★まなびは、未来のカギ",en:"★ Learning is a future key"}, items:[
     ["📚",{ja:"<b>まなびマス</b>やトビラ、🎴できごとで★まなびが貯まる。",en:"Collect ★ from <b>Learning squares</b>, doors, and 🎴 events."}],
