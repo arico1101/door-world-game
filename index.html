@@ -76,15 +76,6 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
   box-shadow:0 8px 10px -8px rgba(74,58,48,.35);
 }
 .sticky-head .players-strip{margin-bottom:0;}
-@media (max-width:520px){
-  .sticky-head .pcard{padding:6px 8px; font-size:11px;}
-  .sticky-head .pcard .nm{font-size:12.5px; margin-bottom:2px;}
-  .topbar{gap:6px; margin-bottom:8px;}
-  .topbar .logo{font-size:14px; white-space:nowrap;}
-  .turn-pill{padding:6px 12px; font-size:13px; white-space:nowrap;}
-  .help-btn{width:32px; height:32px; font-size:15px;}
-}
-@media (max-width:430px){ .topbar .logo{display:none;} }
 .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:1100px; margin:0 auto 10px;}
 .topbar .logo{font-weight:900; font-size:18px; letter-spacing:.1em;}
 .turn-pill{
@@ -344,6 +335,29 @@ h1.game-title{font-size:clamp(34px,8vw,52px); font-weight:900; letter-spacing:.1
 }
 .insight b{color:var(--orange);}
 .res-btns{text-align:center; margin-top:26px;}
+/* ---------- スマホ対応 ----------
+   ここから下はベース定義のあとに置くこと。詳細度が同じなので、前に書くと効かない */
+@media (max-width:520px){
+  .sticky-head .pcard{padding:6px 8px; font-size:11px;}
+  .sticky-head .pcard .nm{font-size:12.5px; margin-bottom:2px;}
+  .topbar{gap:6px; margin-bottom:8px;}
+  .topbar .logo{font-size:14px; white-space:nowrap;}
+  .turn-pill{padding:6px 12px; font-size:13px; white-space:nowrap;}
+  .help-btn{width:32px; height:32px; font-size:15px;}
+}
+@media (max-width:430px){ .topbar .logo{display:none;} }
+
+/* 盤面の3列を画面に収め、マスの文字を大きく（オンライン版・国内版と同じ） */
+@media (max-width:640px){
+  .board{min-width:0;}
+  .sq{font-size:12.5px;}
+  .sq .ic{font-size:26px;}
+  .sq.t-choice .ic{font-size:30px;}
+  .sq .num{font-size:12.5px;}
+  .chapter{white-space:normal;}
+  .turn-pill{flex:1; min-width:0; justify-content:center; overflow:hidden;}
+}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important; transition:none!important;}
 }
@@ -852,18 +866,25 @@ function revealFamilyCard(i){
 }
 
 /* ===================== board ===================== */
+/* スマホ(〜640px)は3列×12行、それ以外は6列×6行。1章=6マスはどちらでも整数行になる */
+const mqMobile = window.matchMedia("(max-width:640px)");
+function boardCols(){ return mqMobile.matches ? 3 : 6; }
 function gridPos(i){
-  const row = Math.floor(i/6);
-  const col = (row % 2 === 0) ? (i % 6) : (5 - (i % 6));
+  const cols = boardCols();
+  const row = Math.floor(i/cols);
+  const col = (row % 2 === 0) ? (i % cols) : (cols-1 - (i % cols));
   return {row, col};
 }
 function renderBoard(){
   const b = $("board");
   b.innerHTML = "";
+  const cols = boardCols();
+  const rpc = 6 / cols;  /* 1章あたりのマス行数 */
+  b.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   CHAPTERS.forEach((c,r)=>{
     const lab = document.createElement("div");
     lab.className = "chapter";
-    lab.style.gridRow = r*2+1;
+    lab.style.gridRow = r*(rpc+1)+1;
     lab.style.gridColumn = "1 / -1";
     lab.innerHTML = L(c.t) + (c.note ? `<span class="ch-note">${L(c.note)}</span>` : "")
       + `<span class="ch-dir">${r % 2 === 0
@@ -877,12 +898,19 @@ function renderBoard(){
     el.className = `sq t-${sq.t}`;
     el.id = `sq-${i}`;
     const {row,col} = gridPos(i);
-    el.style.gridRow = row*2+2; el.style.gridColumn = col+1;
+    const chap = Math.floor(i/6);
+    el.style.gridRow = chap*(rpc+1) + (row - chap*rpc) + 2;
+    el.style.gridColumn = col+1;
     const ageLabel = (sq.t === "choice" || sq.t === "start" || sq.t === "goal") ? `<span class="num">${lang==="ja" ? AGES[i]+"歳" : AGES[i]}</span>` : "";
     el.innerHTML = `${ageLabel}<span class="ic">${m.ic}</span><span>${L(sq.name) || L(m.label)}</span><div class="tokens"></div>`;
     b.appendChild(el);
   });
 }
+/* 画面幅が切り替わったら盤面を組み直す */
+mqMobile.addEventListener("change", ()=>{
+  renderBoard();
+  if(players.length) renderTokens();
+});
 function renderTokens(){
   document.querySelectorAll(".sq .tokens").forEach(t=>t.innerHTML="");
   players.forEach((p,idx)=>{
