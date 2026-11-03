@@ -57,6 +57,14 @@ h1.game-title{font-size:clamp(32px,8vw,48px); font-weight:900; letter-spacing:.1
 .chip-btn{background:var(--card); border-radius:999px; padding:8px 18px; font-weight:700;
   font-size:13.5px; color:var(--ink); box-shadow:var(--sh-s);}
 .chip-btn.on{background:var(--gold); color:#7A6320;}
+/* 盤面の長さのえらびかた */
+.mode-pick{background:var(--card); border-radius:16px; padding:12px 15px 14px; margin:0 auto 12px;
+  width:min(440px,100%); box-shadow:var(--sh-s);}
+.mode-pick .k{font-size:12.5px; font-weight:900; color:var(--ink); margin-bottom:8px;}
+.mode-pick .row-btns{margin:0 0 6px; flex-wrap:wrap;}
+.mode-pick .chip-btn{box-shadow:inset 0 0 0 2px var(--line); background:#F7FBFD;}
+.mode-pick .chip-btn.on{background:var(--gold); color:#7A6320; box-shadow:inset 0 0 0 2px #E0AE28;}
+.mode-pick .note{font-size:11.5px; font-weight:700; color:var(--sub); line-height:1.7;}
 .fac-toggle{display:flex; align-items:flex-start; gap:9px; text-align:left; background:var(--card);
   border-radius:16px; padding:12px 15px; font-size:12.5px; font-weight:700; line-height:1.7;
   margin:0 auto 20px; width:min(440px,100%); cursor:pointer; box-shadow:var(--sh-s);}
@@ -457,6 +465,11 @@ h1.game-title{font-size:clamp(32px,8vw,48px); font-weight:900; letter-spacing:.1
       <button class="chip-btn" id="langEn">English</button>
       <button class="chip-btn" id="seBtnSetup" data-se="off">音</button>
     </div>
+    <div class="mode-pick" id="modeWrap">
+      <div class="k" id="modeLabel"></div>
+      <div class="row-btns" id="modeBtns"></div>
+      <div class="note" id="modeNote"></div>
+    </div>
     <div class="player-inputs" id="playerInputs"></div>
     <div class="row-btns">
       <button class="chip-btn" id="addPlayer"></button>
@@ -520,7 +533,7 @@ h1.game-title{font-size:clamp(32px,8vw,48px); font-weight:900; letter-spacing:.1
      file:// でも動くように、import ではなくこの中に直接書く -->
 <script>
 /* @sync:rules begin — node sync-rules.mjs が書きかえる。手で直さないこと */
-/* 取りこみ元: door-world-online/public/rules.js — chars-by-family bd326d3 2026-10-06 */
+/* 取りこみ元: door-world-online/public/rules.js — main ff00b9c 2026-11-03 */
 const R = (() => {
 /* ===== トビラ せかい版 — 共有ルールモジュール =====
    サーバー(Durable Object)とブラウザの両方から読み込む。DOMに触れない純粋なデータとロジックだけを置く。
@@ -1277,7 +1290,7 @@ return { PCOLORS, TYPE_META, FAM_TONE, CHARS, FAM_LOOK, CHAR_POOL, CHAR_COLOR, a
 <!-- 効果音。オンライン版の public/se.js を同じく流しこんでいる -->
 <script>
 /* @sync:se begin — node sync-rules.mjs が書きかえる。手で直さないこと */
-/* 取りこみ元: door-world-online/public/se.js — chars-by-family bd326d3 2026-10-06 */
+/* 取りこみ元: door-world-online/public/se.js — main ff00b9c 2026-11-03 */
 const SE = (() => {
 /* ===== 効果音 =====
    音のファイルは持たない。鳴らすたびに WebAudio で組み立てる。
@@ -1406,7 +1419,11 @@ return { isOn, setOn, toggle, resume, play };
    ルール・文言・盤面は R（オンライン版の rules.js）をそのまま使う。
    判定の流れはオンライン版のサーバー(src/index.js)、見た目は画面(app.js)に合わせてある。
    オンライン版とちがうのは「全員が同じ画面を見る」こと：観戦・選択肢の秘匿・進行役メニューはない。 */
-const M = R.mode("full");   /* 1画面版は「ぜんぶ」の盤面だけ。みじかめ(short)は入れない */
+/* 盤面の長さ（ぜんぶ／みじかめ）。はじめの画面で選び、前回の選択を覚えておく */
+let modeKey = "full";
+try { modeKey = R.MODES[localStorage.getItem("tobira-mode")] ? localStorage.getItem("tobira-mode") : "full"; } catch {}
+let M = R.mode(modeKey);
+const hasTalk = () => M.SQUARES.some(sq => sq.t === "talk");
 
 /* ---------- i18n ---------- */
 let lang = "ja";
@@ -1466,6 +1483,7 @@ let pending = null;       /* いま画面に出しているできごと。オン
 let logged = false;       /* pending のトビラを、結果発表の記録に数えたか */
 let busy = false;         /* サイコロとコマが動いているあいだ */
 let famIdx = null;        /* 家庭カードを配っている最中なら、その人の番号 */
+let talkDone = false;     /* 22歳の「みんなで話す」は1ゲームに1回（みじかめだけ） */
 
 /* ---------- 画面とモーダル ---------- */
 function showScreen(id) {
@@ -1513,10 +1531,33 @@ function refreshDots() {
   });
   $("addPlayer").disabled = $("playerInputs").children.length >= M.maxPlayers;
 }
+/* 盤面の長さのえらびかた。人数の上限はモードで変わるので、短いほうへ切りかえると
+   入りきらない人の欄は消える（名前が入っていたら先に断る） */
+function renderModePick() {
+  $("modeLabel").textContent = ja() ? "どこまで遊ぶ？" : "How far do you play?";
+  $("modeBtns").innerHTML = Object.keys(R.MODES).map(k =>
+    `<button class="chip-btn${k === modeKey ? " on" : ""}" data-mode="${k}">${L(R.MODES[k].label)}</button>`).join("");
+  $("modeBtns").querySelectorAll("[data-mode]").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  $("modeNote").textContent = ja()
+    ? `${M.SQUARES.length}マス・${lastAge()}歳まで・${M.minStart}〜${M.maxPlayers}人`
+    : `${M.SQUARES.length} squares · up to age ${lastAge()} · ${M.minStart}–${M.maxPlayers} players`;
+}
+function setMode(k) {
+  if (k === modeKey || !R.MODES[k]) return;
+  const m = R.MODES[k], rows = [...$("playerInputs").children];
+  const over = rows.slice(m.maxPlayers);
+  if (over.some(r => r.querySelector("input").value.trim()) && !confirm(ja()
+      ? `${L(m.label)} は${m.maxPlayers}人までです。${m.maxPlayers + 1}人目からの欄は消えます。よろしいですか？`
+      : `${L(m.label)} takes up to ${m.maxPlayers}. Players after the ${m.maxPlayers}th will be removed. Continue?`)) return;
+  over.forEach(r => r.remove());
+  modeKey = k; M = R.mode(k);
+  try { localStorage.setItem("tobira-mode", k); } catch {}
+  applyLang();
+}
 function initSetup() {
   const box = $("playerInputs");
   box.innerHTML = "";
-  for (let i = 0; i < 3; i++) box.appendChild(makeInputRow(i));
+  for (let i = 0; i < Math.min(3, M.maxPlayers); i++) box.appendChild(makeInputRow(i));
   refreshDots();
 }
 $("addPlayer").onclick = () => {
@@ -1557,6 +1598,7 @@ function applyLang() {
   $("allDoorsBtn").textContent = ja() ? `${years()}年間のトビラ一覧を見る` : `See all doors of the ${years()} years`;
   $("againBtn").textContent = ja() ? "もういちど遊ぶ" : "Play again";
   refreshDots();
+  renderModePick();
   syncSe();
   if (players.length && $("game").classList.contains("active")) { renderBoard(); renderTokens(); updateTurnUI(); }
 }
@@ -1593,6 +1635,7 @@ function startGame() {
   });
   R.assignChars(players);                           /* 家庭に合った見た目と色をくばる */
   turn = 0; deck = []; pending = null; busy = false; famIdx = 0;
+  talkDone = false;
   showScreen("game");
   window.scrollTo(0, 0);
   renderBoard(); renderTokens(); updateTurnUI();
@@ -1735,13 +1778,25 @@ function showPlayerCard(i) {
 
 /* ===================== 盤面 =====================
    オンライン版 app.js の盤面をそのまま持ってきている。
-   マスをマス目に並べるのではなく、1本の道を36等分してタイルに切る。 */
+   マスをマス目に並べるのではなく、1本の道をマスの数で等分してタイルに切る。 */
 const NS = "http://www.w3.org/2000/svg";
 const el = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
 const mqMobile = window.matchMedia("(max-width:700px)");
 
-/* ぜんぶ（36マス）の PC 6段。1段目と最終段だけ左へ66のばしてあり、
-   Uターンがちょうど半分で切れて切り口が水平になる */
+/* 盤面の道。マスの数だけ等分して切るので、段の数ぶんだけ折れ線を用意する。
+   みじかめ（24マス）は PC 4段・スマホ 8段、ぜんぶ（36マス）は PC 6段・スマホ 12段。
+   1段目と最終段だけ左へ66のばしてあり、Uターンがちょうど半分で切れて切り口が水平になる */
+const LAY_WIDE_SHORT = {
+  vb: [1780, 864], corner: 100, skyH: 84, artH: 250, aspect: 2.06,
+  pts: [[106,150],[1672,150],[1672,360],[172,360],[172,570],[1672,570],[1672,780],[106,780]],
+  sub: true, tokenW: 52, tokenH: 66, fsBig: 21, fsSmall: 17,
+};
+const LAY_TALL_SHORT = {
+  vb: [560, 1965], corner: 112, skyH: 108, artH: 235,
+  pts: [[92,200],[468,200],[468,440],[92,440],[92,680],[468,680],[468,920],[92,920],
+        [92,1160],[468,1160],[468,1400],[92,1400],[92,1640],[468,1640],[468,1880],[92,1880]],
+  sub: false, tokenW: 46, tokenH: 58, fsBig: 21, fsSmall: 18,
+};
 const LAY_WIDE = {
   vb: [1780, 1284], corner: 100, skyH: 84, artH: 250, aspect: 1.386,
   pts: [[106,150],[1672,150],[1672,360],[172,360],[172,570],[1672,570],
@@ -1963,7 +2018,8 @@ function tileIcon(type, cx, cy, c) {
 }
 
 function renderBoard() {
-  const lay = mqMobile.matches ? LAY_TALL : LAY_WIDE;
+  const lay = M.SQUARES.length > 24 ? (mqMobile.matches ? LAY_TALL : LAY_WIDE)
+                                     : (mqMobile.matches ? LAY_TALL_SHORT : LAY_WIDE_SHORT);
   document.documentElement.style.setProperty("--board-aspect", String(lay.aspect || 1.386));
   geo = buildGeo(lay);
   const svg = $("board");
@@ -2244,7 +2300,7 @@ $("diceBtn").onclick = async () => {
   if (!child) await rollBigDice(steps);
   let target = Math.min(p.pos + steps, M.SQUARES.length - 1);
   for (let i = p.pos + 1; i < target; i++) {
-    if (M.SQUARES[i].stop) { target = i; break; }
+    if (M.SQUARES[i].stop && !(M.SQUARES[i].t === "talk" && talkDone)) { target = i; break; }
   }
   while (p.pos < target) {
     p.pos++;
@@ -2352,12 +2408,19 @@ function resolveSquare() {
     if (heavyOn && !p.hadHeavy && p.pos >= M.heavyFrom && Math.random() < 0.3) setChoice(R.heavyDef(p), "heavy", true);
     else if (!drawEvent()) return endTurn();
   }
+  else if (sq.t === "talk") {
+    /* いちばんに着いた人だけが止まり、全員で話す。ほかの人は通りすぎる */
+    if (talkDone) return endTurn();
+    talkDone = true;
+    setInfo("talk", R.TALK.title, R.TALK.body, {},
+      bi(R.TALK.asks.ja + "<br><br>" + R.TALK.note.ja, R.TALK.asks.en + "<br><br>" + R.TALK.note.en));
+  }
   else if (sq.t === "learn") setChoice(R.choiceDef("learnSq", p, M), "learn");
   else if (sq.t === "choice") setChoice(R.choiceDef(sq.key, p, M), "choice");
   else if (sq.t === "goal") {
     p.done = true;
     p.rankAt = players.filter(x => x.done).length;
-    /* 35歳のゴールで、のこった奨学金を一括清算する（MODES.full.settleLoan） */
+    /* ぜんぶ(35歳)のゴールでは、のこった奨学金を一括清算する（M.settleLoan）。みじかめは背負ったまま */
     pending = { kind: "goal", rankAt: p.rankAt, loan: p.loan,
                 fx: { happy: p.rankAt === 1 ? 1 : 0, money: (M.settleLoan && p.loan > 0) ? -p.loan : 0 } };
   }
@@ -2540,7 +2603,20 @@ function renderPending() {
   if (pendingShown !== pd) { se(pendingSe(pd)); pendingShown = pd; }
   const type = pd.type === "heavy" ? "heavy" : (["learn", "event", "income", "cost"].includes(pd.type) ? pd.type : "choice");
 
-  if (pd.kind === "info") {
+  if (pd.kind === "info" && pd.type === "talk") {
+    /* みんなで話すマス。止まった人の名前を出して、話し終わったらすすむ */
+    openModal(`<div class="m-head">
+        ${tagChip("talk")}
+        <h2>${L(pd.title)}</h2>
+        <p class="m-sub">${ja() ? `${p.name} さんが このマスに止まりました` : `${p.name} landed here`}</p></div>
+      <div class="m-body">
+        <p class="m-lead">${L(pd.body)}</p>
+        ${noteBox(pd.note, "talk")}
+        <button class="m-btn" id="mOk">${ja() ? "話せた！ すすむ" : "We talked — continue"}</button>
+      </div>`);
+    $("mOk").onclick = confirmPending;
+  }
+  else if (pd.kind === "info") {
     openModal(`<div class="m-head">
         ${tagChip(pd.type === "heavy" ? "heavy" : (R.TYPE_META[pd.type] ? pd.type : "event"))}
         <h2>${L(pd.title)}</h2></div>
@@ -2887,6 +2963,7 @@ const rulePages = () => [
     ["walk",{ja:"<b>子ども時代（6〜15歳）はサイコロを使わず、1マスずつ</b>進む。人生の土台をつくる時間だ。",en:"<b>In childhood (6–15) there's no dice — one square at a time.</b> These years build your base."}],
     ["heart",{ja:"最後の順位は、おかねの多さじゃなく <b>♥ハッピーの数</b>で決まる！",en:"The final ranking isn't about money — it's the number of <b>♥ Happiness</b>!"}],
     ["door",{ja:"♥は、人生の選択「<b>トビラ</b>」を開けるともらえる。<b>♥の数＝じぶんの意思で選べた数</b>だ。",en:"You earn ♥ by opening life's <b>Doors</b>. <b>♥ = how often you chose with your own will.</b>"}],
+    ...(hasTalk() ? [["people",{ja:"22歳に<b>「みんなで話す」マス</b>がひとつ。いちばんに着いた人が止まり、<b>全員でいまの状況と、選んだ理由</b>を話す。ほかの人はそこを通りすぎる。",en:"At age 22 there's one <b>Talk Together square</b>. The first to arrive stops and <b>everyone talks</b> about where they are and why they chose what they chose. The rest walk past."}]] : []),
   ]},
   {type:"choice", tag:{ja:"トビラとカギ",en:"Doors & keys"}, title:{ja:"いい選択には「カギ」がいる",en:"Good choices need keys"}, items:[
     ["door",{ja:"<b>大きなトビラのマス</b>に止まると、人生の選択がやってくる。",en:"Land on a big <b>Door square</b> and a life choice arrives."}],
